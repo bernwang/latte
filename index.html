@@ -4,10 +4,18 @@
 		<title>Point Cloud Viewer</title>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.6.0/css/font-awesome.min.css" rel="stylesheet">
 		<link href="styles/style.css" rel="stylesheet">
 	</head>
 
 	<body>
+		<nav class="tools">
+			<ul id="tools">
+				<li><a href="#" id="save"><i class="fa fa-floppy-o"></i></a></li>
+				<li><a href="#" id="move"><i class="fa fa-arrows"></i></a></li>
+				<li><a href="#" class="selected" id="label"><i class="fa fa-pencil"></i></a></li>
+			</ul>
+		</nav>
 		<nav>
 			<ul id="navigation">
 
@@ -21,6 +29,7 @@
 	<script src="js/Detector.js"></script>
 	<script src="js/libs/stats.min.js"></script>
     <script src="js/output.js?nocache"></script>
+	<script src="js/FileSaver.min.js"></script>
 	<script type="x-shader/x-vertex" id="vertexshader">
 		attribute float size;
 		attribute vec3 customColor;

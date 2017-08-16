@@ -6,8 +6,10 @@ var raycaster;
 var mouse = new THREE.Vector2();
 var intersection = null;
 var spheres = [];
-var sphereXs = new Set();
+var pointsWithSpheres = new Set();
 var clock;
+var mouseDown;
+var highlightMode = false;
 
 var threshold = 0.1;
 var pointSize = 0.5;
@@ -16,8 +18,7 @@ init();
 animate();
 
 // Should be in init?
-var sphereGeometry = new THREE.SphereGeometry( 0.1, 32, 32 );
-var sphereMaterial = new THREE.MeshBasicMaterial( { color: 0xff0000, shading: THREE.FlatShading } );
+var sphereGeometry, sphereMaterial;
 
 function generatePointCloudGeometry( vertices, color ){
 
@@ -91,21 +92,13 @@ function init() {
     clock = new THREE.Clock();
 
     camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 10000 );
-    camera.position.y = 50;
-    camera.position.z = 75;
+    camera.position.y = 25;
+    camera.position.z = 37;
 
     //
 
-    var sphereGeometry = new THREE.SphereGeometry( 0.1, 32, 32 );
-    var sphereMaterial = new THREE.MeshBasicMaterial( { color: 0xff0000, shading: THREE.FlatShading } );
-
-//    for ( var i = 0; i < 40; i++ ) {
-//
-//        var sphere = new THREE.Mesh( sphereGeometry, sphereMaterial );
-//        scene.add( sphere );
-//        spheres.push( sphere );
-//
-//    }
+    sphereGeometry = new THREE.SphereGeometry( 0.1, 32, 32 );
+    sphereMaterial = new THREE.MeshBasicMaterial( { color: 0xff0000, shading: THREE.FlatShading } );
 
     //
 
@@ -133,11 +126,17 @@ function init() {
     //
 
     controls = new THREE.OrbitControls( camera, renderer.domElement );
+    controls.enabled = false;
 
     //
 
     window.addEventListener( 'resize', onWindowResize, false );
     document.addEventListener( 'mousemove', onDocumentMouseMove, false );
+    document.addEventListener( 'mousedown', onDocumentMouseDown, false );
+    document.addEventListener( 'mouseup', onDocumentMouseUp, false );
+    document.getElementById( 'save' ).addEventListener( 'click', save, false );
+    document.getElementById( 'move' ).addEventListener( 'click', moveMode, false );
+    document.getElementById( 'label' ).addEventListener( 'click', labelMode, false );
 
     //
 
@@ -152,6 +151,20 @@ function onDocumentMouseMove( event ) {
 
     mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
     mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+
+}
+
+function onDocumentMouseUp( event ) {
+
+    event.preventDefault();
+    mouseDown = false;
+
+}
+
+function onDocumentMouseDown( event ) {
+
+    event.preventDefault();
+    mouseDown = true;
 
 }
 
@@ -179,31 +192,22 @@ function render() {
 
     raycaster.setFromCamera( mouse, camera );
 
-    var intersections = raycaster.intersectObjects( pointcloud );
+    var intersections = raycaster.intersectObjects( [pointcloud] );
     intersection = ( intersections.length ) > 0 ? intersections[ 0 ] : null;
 
-    if ( toggle > 0.005 && intersection !== null && !(intersection.point.x in sphereXs)) {
+    if ( toggle > 0.005 && intersection !== null && !(
+            pointsWithSpheres.has(intersection.index)) && mouseDown
+            && !controls.enabled) {
 
-        sphereXs.add(intersection.point.x);
+        var point = pointcloud.geometry.vertices[intersection.index];
         var sphere = new THREE.Mesh( sphereGeometry, sphereMaterial );
-        sphere.position.copy( intersection.point );
+        sphere.position.copy( point );
         scene.add(sphere);
         spheres.push(sphere);
-//        spheres[ spheresIndex ].position.copy( intersection.point );
-//        spheres[ spheresIndex ].scale.set( 1, 1, 1 );
-//        spheresIndex = ( spheresIndex + 1 ) % spheres.length;
+        pointsWithSpheres.add(intersection.index);
 
         toggle = 0;
-
     }
-
-//    for ( var i = 0; i < spheres.length; i++ ) {
-//
-//        var sphere = spheres[ i ];
-//        sphere.scale.multiplyScalar( 0.98 );
-//        sphere.scale.clampScalar( 0.01, 1 );
-//
-//    }
 
     toggle += clock.getDelta();
 
@@ -245,13 +249,49 @@ function show(button, obj_name) {
         rotation = pointcloud.rotation.y;
     }
 
-    var pcRegular = generatePointCloudForCluster( obj_name );
-    pcRegular.rotation.y = rotation;
-    scene.add( pcRegular );
-
-    pointcloud = [pcRegular];
+    pointcloud = generatePointCloudForCluster( obj_name );
+    pointcloud.rotation.y = rotation;
+    scene.add( pointcloud );
 }
 
 function generatePointCloudForCluster(obj_name) {
-  return generatePointCloud(data[obj_name]['vertices'], new THREE.Color( 1,0,1 ));
+    return generatePointCloud(data[obj_name]['vertices'], new THREE.Color( 0,1,0 ));
 }
+
+function moveMode( event ) {
+    event.preventDefault();
+    controls.enabled = true;
+    document.getElementById( 'label' ).className = "";
+    document.getElementById( 'move' ).className = "selected";
+}
+
+function labelMode( event ) {
+    event.preventDefault();
+    controls.enabled = false;
+    document.getElementById( 'label' ).className = "selected";
+    document.getElementById( 'move' ).className = "";
+}
+
+function save() {
+    textContents = [];
+    var numHighlighted = 0
+    for (var i=0;i<pointcloud.geometry.vertices.length;i++) {
+        var point = pointcloud.geometry.vertices[i];
+        var highlighted = pointsWithSpheres.has(i) ? 1 : 0;
+        numHighlighted += highlighted;
+        string = "%f,%f,%f,%d\n".format(point.x, point.y, point.z, highlighted);
+        textContents.push(string);
+    }
+    console.log('Number of highlighted points: ' + numHighlighted.toString());
+    var blob = new Blob(textContents, {type: "text/plain;charset=utf-8"});
+    saveAs(blob, "labelled.csv");
+}
+
+// https://stackoverflow.com/a/15327425/4855984
+String.prototype.format = function(){
+    var a = this, b;
+    for(b in arguments){
+        a = a.replace(/%[a-z]/,arguments[b]);
+    }
+    return a; // Make chainable
+};

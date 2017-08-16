@@ -19,9 +19,13 @@ body {
 a {
   color: #fff;
 }
+nav.tools {
+    right:auto;
+    left:2em;
+}
 nav {
     position:fixed;
-    top:2em;
+    top:4em;
     right:2em;
     z-index:100;
     border-radius:0.25em;
