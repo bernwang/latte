@@ -108,7 +108,7 @@ function init() {
 
     //
 
-    renderer = new THREE.WebGLRenderer();
+    renderer = new THREE.WebGLRenderer({preserveDrawingBuffer: true});
     renderer.setPixelRatio( window.devicePixelRatio );
     renderer.setSize( window.innerWidth, window.innerHeight );
     container.appendChild( renderer.domElement );
@@ -135,6 +135,7 @@ function init() {
     document.addEventListener( 'mousedown', onDocumentMouseDown, false );
     document.addEventListener( 'mouseup', onDocumentMouseUp, false );
     document.getElementById( 'save' ).addEventListener( 'click', save, false );
+    document.getElementById( 'export' ).addEventListener( 'click', save_image, false );
     document.getElementById( 'move' ).addEventListener( 'click', moveMode, false );
     document.getElementById( 'label' ).addEventListener( 'click', labelMode, false );
 
@@ -285,6 +286,12 @@ function save() {
     console.log('Number of highlighted points: ' + numHighlighted.toString());
     var blob = new Blob(textContents, {type: "text/plain;charset=utf-8"});
     saveAs(blob, "labelled.csv");
+}
+
+function save_image() {
+    renderer.domElement.toBlob(function (blob) {
+        saveAs(blob, "image.png");
+    });
 }
 
 // https://stackoverflow.com/a/15327425/4855984
