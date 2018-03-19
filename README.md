@@ -1,5 +1,5 @@
 # lidar-annotator
-Lidar annotation tool for instance-level segmentation using ray tracing and bounding boxes.
+Lidar annotation tool using ray tracing and bounding boxes.
 
 # Usage
 1. Clone the repository
