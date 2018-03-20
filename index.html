@@ -5,6 +5,7 @@
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 		<link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.6.0/css/font-awesome.min.css" rel="stylesheet">
+		<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 		<link href="styles/style.css" rel="stylesheet">
 	</head>
 
@@ -15,7 +16,7 @@
 				<li><a href="#" id="draw-box"><i class="fas fa-cube"></i></a></li>
 				<li><a href="#" id="save"><i class="fa fa-floppy-o"></i></a></li>
                                 <li><a href="#" id="export"><i class="fa fa-picture-o"></i></a></li>
-				<li><a href="#" class="selected" id="move"><i class="fa fa-arrows"></i></a></li>
+				<li><a href="#" class="selected" id="move"><i class="large material-icons">3d_rotation</i></a></li>
 				<li><a href="#" id="move2D"><i class="fa fa-arrows"></i></a></li>
 				<li><a href="#" id="label"><i class="fa fa-pencil"></i></a></li>
 
@@ -41,7 +42,7 @@
 	    </div>
 
 
-		<div id="info">Point Cloud Viewer</div>
+		<div id="info">Lidar Annotator</div>
 
     <script src="js/three.min.js"></script>
     <!-- <script src="js/DragControls.js"></script> -->
@@ -62,7 +63,7 @@
 			gl_PointSize = size * ( 300.0 / -mvPosition.z );
 			gl_Position = projectionMatrix * mvPosition;
 		}
-	</script> -->
+	</script>
 
 	<script type="x-shader/x-fragment" id="fragmentshader">
 		uniform vec3 color;

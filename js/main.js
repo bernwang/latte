@@ -24,6 +24,9 @@ var image_loaded = false;
 var newBoundingBox;
 var newBox;
 
+var newBoundingBox2;
+var newBox2;
+
 var mouse = new THREE.Vector3();
 var anchor = new THREE.Vector3();
 
@@ -33,8 +36,6 @@ var move2D = false;
 
 var t = 0, dt = 0.01;                   // t (dt delta for demo)
 var start, end;
-    // a = {x: -2, y: -1, z: -1},          // start position
-    // b = {x: 1.5, y: 0.5, z: 0.7};       // end position
     
 init();
 // animate();
@@ -50,13 +51,12 @@ function generatePointCloud( vertices, color ) {
     var colors = [];
 
     var k = 0;
-
+    var stride = 128;
     for ( var i = 0, l = vertices.length; i < l; i ++ ) {
         // creates new vector from a cluster and adds to geometry
-        var v = new THREE.Vector3( vertices[ 32 * k + 1 ], 
-            vertices[ 32 * k + 2 ], vertices[ 32 * k ] );
-        // var v = new THREE.Vector3( vertices[ 32 * k + 1 ], 
-        //     0, vertices[ 32 * k ] );
+        var v = new THREE.Vector3( vertices[ stride * k + 1 ], 
+            vertices[ stride * k + 2 ], vertices[ stride * k ] );
+
         geometry.vertices.push( v );
 
         var intensity = ( 1 ) * 7;
@@ -162,12 +162,74 @@ function onDocumentMouseMove( event ) {
             if (newBox != null) {
                 scene.add( newBox );
             }
-            var minVector = getMin(cursor, anchor);
-            var maxVector = getMax(cursor, anchor);
+            if (newBox2 != null) {
+                // scene.add( newBox2 );
+            }
+            // var minVector = getMin(cursor, anchor);
+            // var maxVector = getMax(cursor, anchor);
+            // newBoundingBox.set(minVector, maxVector);
+
+            var axis = new THREE.Vector3( 0, 0, 1 );
+            var angle = camera.rotation.z;
+            ;
+            var v1 = cursor.clone();
+            var v2 = anchor.clone();
+
+            var v3 = cursor.clone();
+            var v4 = anchor.clone();
+            rotate(v1, v2, -angle);
+
+
+            var minVector = getMin(v1, v2);
+            var maxVector = getMax(v1, v2);
+            // console.log("center: ", getCenter(getMin(anchor, cursor), getMax(anchor, cursor)));
+            // console.log("new center: ", getCenter(getMin(v1, v2), getMax(v1, v2)));
+
             newBoundingBox.set(minVector, maxVector);
+            newBox.rotation.y = angle;
+            // newBox.center = getCenter(anchor, cursor);
+
+            var minVector2 = getMin(v3, v4);
+            var maxVector2 = getMax(v3, v4);
+            newBoundingBox2.set(minVector2, maxVector2);
+
+            console.log("v1: ", v1);
+            console.log("v2: ", v2);
+            console.log("v3: ", v3);
+            console.log("v4: ", v4);
+            console.log("angle: ", angle);
+            console.log("dist 1: ", minVector.distanceTo(maxVector));
+            console.log("dist 2: ", minVector2.distanceTo(maxVector2));
+            console.log("min 1: ", minVector);
+            console.log("min 2: ", minVector2);
+            // var geo = new THREE.Geometry();
+            // var colors = [new THREE.Color("blue"), new THREE.Color("red"), new THREE.Color("orange"), new THREE.Color("yellow")];
+            // geo.colors = colors;
+            // var mat = new THREE.PointsMaterial( { size: 0.5, vertexColors: THREE.VertexColors } );
+            // var pcloud = new THREE.Points( geo, mat );
+            
+            // scene.add(pcloud);
         }
         
     }
+}
+
+function getCenter(v1, v2) {
+    return new THREE.Vector3((v1.x + v2.x) / 2, 0, (v1.z + v2.z) / 2);
+}
+
+function rotate(v1, v2, angle) {
+    center = getCenter(v1, v2);
+    v1.sub(center);
+    v2.sub(center);
+    v1.z = Math.cos(angle) * v1.z - Math.sin(angle) * v1.x;
+    v2.z = Math.cos(angle) * v2.z - Math.sin(angle) * v2.x;
+
+    v1.x = Math.sin(angle) * v1.z + Math.cos(angle) * v1.x;
+    v2.x = Math.sin(angle) * v2.z + Math.cos(angle) * v2.x;
+
+    v1.add(center);
+    v2.add(center);
 }
 
 function onDocumentMouseUp( event ) {
@@ -175,6 +237,8 @@ function onDocumentMouseUp( event ) {
     event.preventDefault();
     mouseDown = false;
     newBox = null;
+
+    newBox2 = null;
 }
 
 function onDocumentMouseDown( event ) {
@@ -191,6 +255,11 @@ function onDocumentMouseDown( event ) {
         newBoundingBox = new THREE.Box3(anchor, v);
         anchor = anchor.clone();
         newBox = new THREE.Box3Helper( newBoundingBox, 0xffff00 );
+        console.log(camera.rotation);
+        
+
+        newBoundingBox2 = new THREE.Box3(anchor.clone(), v.clone());
+        newBox2 = new THREE.Box3Helper( newBoundingBox2, 0xffff00 );
     }
 }
 
@@ -288,15 +357,11 @@ function move2DMode( event ) {
     document.getElementById( 'label' ).className = "";
     document.getElementById( 'move2D' ).className = "selected";
     if (!move2D) {
-        start = camera.rotation;
-        // end = dt * start.y;
-        // loop();
-        // renderer.render(scene, camera);
-        camera.rotation.y = 0;
+        // camera.rotation.y = 0;
         controls.maxPolarAngle = 0;
         controls.minPolarAngle = 0;
-        // camera.position.set(0, 100, 0);
-        // camera.lookAt(new THREE.Vector3(0,0,0));
+        camera.position.set(0, 100, 0);
+        camera.lookAt(new THREE.Vector3(0,0,0));
     }
     move2D = true;
 }
@@ -311,31 +376,6 @@ function labelMode( event ) {
         document.getElementById( 'move2D' ).className = "";
 
     }
-}
-
-// linear interpolation function
-function lerp(a, b, t) {return a + (b - a) * t}
-
-
-function loop() {
-    for (var i = 0; i < 100; i++) {
-        camera.rotation.y -= end;
-        controls.update();
-        // render();
-        // requestAnimationFrame(render);
-        // renderer.render(scene, camera);
-        console.log("loop " + i);
-    }
-  // var newX = lerp(a.x, b.x, ease(t));   // interpolate between a and b where
-  // var newY = lerp(a.y, b.y, ease(t));   // t is first passed through a easing
-  // var newZ = lerp(a.z, b.z, ease(t));   // function in this example.
-  // mesh.position.set(newX, newY, newZ);  // set new position
-  // t += dt;
-  // if (t <= 0 || t >=1) dt = -dt;        // ping-pong for demo
-  
-  // t += dt;
-  // renderer.render(scene, camera);
-  // requestAnimationFrame(loop);
 }
 
 
@@ -390,7 +430,7 @@ function readData(e) {
     var floatarr = new Float32Array(rawLog)
     
     data = floatarr;
-    // console.log(data);
+    console.log(data[0]);
     // console.log(data.length);
 
     show();
@@ -404,6 +444,7 @@ function drawBox() {
     console.log(boundingBox);
     console.log(selectedPoints);
     var helper = new THREE.Box3Helper( boundingBox, 0xffff00 );
+    helper.setRotationFromEuler(camera.rotation);
     boundingBoxes.push(boundingBox);
     boxMap.set(boundingBox, selectedPoints);
     selectedPoints = [];
