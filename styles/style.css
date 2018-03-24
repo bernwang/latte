@@ -23,6 +23,11 @@ nav.tools {
     right:auto;
     left:2em;
 }
+
+nav.tools i {
+  font-size: 12px;
+}
+
 nav {
     position:fixed;
     top:4em;
@@ -71,3 +76,41 @@ nav a:hover {
 nav li + li {
     border-top:1px solid #444;
 }
+
+/*.inputfile {
+  width: 0.1px;
+  height: 0.1px;
+  opacity: 0;
+  overflow: hidden;
+  position: absolute;
+  z-index: -1;
+}
+
+.inputfile + label {
+    font-size: 1.25em;
+    font-weight: 700;
+    color: white;
+    background-color: black;
+    display: inline-block;
+}
+
+.inputfile:focus + label,
+.inputfile + label:hover {
+    background-color: red;
+}*/
+
+/*.upload {
+  display: inline-flex;
+  align-items: center;
+}
+i.fa-upload {
+  margin: 10px;
+  cursor: pointer;
+  font-size: 30px;
+}
+i:hover {
+  opacity: 0.6;
+}
+input {
+  display: none;
+}*/
