@@ -14,10 +14,6 @@ var threshold = 0.5;
 var pointSize = 0.5;
 // data structures
 var data;
-var spheres = [];
-var pointsWithSpheres = new Set();
-var selectedPoints = [];
-var boxMap = new Map();
 var boundingBoxes = [];
 var image_loaded = false;
 
@@ -34,7 +30,7 @@ var boxmaterial = new THREE.MeshDepthMaterial( {opacity: .1} );
 var move2D = false;
 
 var angle;
-
+var distanceThreshold = 1;
 var hoverIdx;
 var hoverBox;
 var resizeBox;
@@ -80,16 +76,13 @@ function generatePointCloud( vertices, color ) {
 
 }
 
-function Box(anchor, cursor, boundingBox, boxHelper) {
+function Box(anchor, cursor, angle, boundingBox, boxHelper) {
     this.color = new THREE.Color( 1,0,0 );
+    this.angle = angle;
     this.anchor = anchor;
     this.geometry = new THREE.Geometry();
-    this.rotatedGeometry = new THREE.Geometry();
     // visualizes the corners (in the non-rotated coordinates) of the box
     this.points = new THREE.Points( this.geometry, pointMaterial );
-
-    // represents the coerners (in the rotated coordinates) of the box
-    this.rotatedPoints = new THREE.Points( this.rotatedGeometry, pointMaterial );
 
     this.boundingBox = boundingBox; // Box3; sets the size of the box
     this.boxHelper = boxHelper; // BoxHelper; helps visualize the box
@@ -98,7 +91,6 @@ function Box(anchor, cursor, boundingBox, boxHelper) {
         this.colors.push( this.color.clone().multiplyScalar( 7 ) );
     }
     this.geometry.colors = this.colors;
-    this.rotatedGeometry.colors = this.colors;
     this.cursor = cursor.clone();
     // order of corners is max, min, topleft, bottomright
     this.geometry.vertices.push(anchor);
@@ -106,17 +98,8 @@ function Box(anchor, cursor, boundingBox, boxHelper) {
     this.geometry.vertices.push(anchor.clone());
     this.geometry.vertices.push(cursor.clone());
 
-    this.rotatedGeometry.vertices.push(anchor.clone());
-    this.rotatedGeometry.vertices.push(cursor.clone());
-    this.rotatedGeometry.vertices.push(anchor.clone());
-    this.rotatedGeometry.vertices.push(cursor.clone());
-
-
     this.points.frustumCulled = false;
-    this.rotatedPoints.frustumCulled = false;
     this.added = false;
-    // this.geometry.computeBoundingBox();
-    // scene.add(this.points);
 }
 
 // called first, populates scene and initializes renderer
@@ -226,27 +209,32 @@ function updateMouse( event ) {
     event.preventDefault();
     mouse2D.x = ( event.clientX / window.innerWidth ) * 2 - 1;
     mouse2D.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
-    // console.log(get3DCoord());
-    // mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
-    // mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
-    // mouse.z = 0.5;
+}
+
+function getOppositeCorner(idx) {
+    if (idx == 0) {return 1;}
+    if (idx == 1) {return 0;}
+    if (idx == 2) {return 3;}
+    return 2;
 }
 
 function resize(box, cursor) {
     if (cursor.x != box.anchor.x && cursor.y != box.anchor.y && cursor.z != box.anchor.z) {
 
-        var angle = camera.rotation.z;
         box.cursor.x = cursor.x;
         box.cursor.y = cursor.y;
         box.cursor.z = cursor.z;
 
-        // box.geometry.vertices[1] = box.cursor.clone();
+        
 
         var v1 = cursor.clone();
         var v2 = box.anchor.clone();
+
+        v1.y = 0;
+        v2.y = 0;
         
         // for rotation
-        rotate(v1, v2, angle);
+        rotate(v1, v2, box.angle);
 
 
         var minVector = getMin(v1, v2);
@@ -254,12 +242,15 @@ function resize(box, cursor) {
         var topLeft = getTopLeft(v1, v2);
         var bottomRight = getBottomRight(v1, v2);
 
+        maxVector.y = 0.00001;
+
         box.boundingBox.set(minVector.clone(), maxVector.clone());
         // for rotation
-        box.boxHelper.rotation.y = angle;
+        box.boxHelper.rotation.y = box.angle;
 
-        rotate(minVector, maxVector, -angle);
-        rotate(topLeft, bottomRight, -angle);
+        maxVector.y = 0;
+        rotate(minVector, maxVector, -box.angle);
+        rotate(topLeft, bottomRight, -box.angle);
 
         // set corner points
         box.geometry.vertices[0] = maxVector.clone();
@@ -267,32 +258,18 @@ function resize(box, cursor) {
         box.geometry.vertices[2] = topLeft.clone();
         box.geometry.vertices[3] = bottomRight.clone();
 
-        rotate(minVector, maxVector, angle);
-        rotate(topLeft, bottomRight, angle);
-
-        box.rotatedGeometry.vertices[0] = maxVector;
-        box.rotatedGeometry.vertices[1] = minVector;
-        box.rotatedGeometry.vertices[2] = topLeft;
-        box.rotatedGeometry.vertices[3] = bottomRight;
 
         box.geometry.verticesNeedUpdate = true;
-        // box.rotatedGeometry.verticesNeedUpdate = true;
-        // console.log("cursor: ", cursor);
-        // console.log("rotated 0: ", box.rotatedGeometry.vertices[0]);
-        // console.log("rotated 1: ", box.rotatedGeometry.vertices[1]);
-        // console.log("rotated 2: ", box.rotatedGeometry.vertices[2]);
-        // console.log("rotated 3: ", box.rotatedGeometry.vertices[3]);
     }
 }
 function onDocumentMouseMove( event ) {
 
     event.preventDefault();
     if (mouseDown == true) {
-        console.log("move");
         var cursor = get3DCoord();
         if (isResizing) {
+            cursor.y -= 0.00001;
             resize(resizeBox, cursor);
-            // console.log(resizeBox.rotatedGeometry.vertices);
         } else {
             if (newBox != null && !newBox.added) {
                 scene.add(newBox.points);
@@ -303,59 +280,6 @@ function onDocumentMouseMove( event ) {
         }
     }
 }
-
-//     if (cursor.x != anchor.x && cursor.y != anchor.y && cursor.z != anchor.z) {
-//         if (newBox != null && !newBox.added) {
-//             scene.add(newBox.points);
-//             scene.add( newBox.boxHelper );
-//             newBox.added = true;
-//         }
-
-//         var angle = camera.rotation.z;
-//         newBox.cursor.x = cursor.x;
-//         newBox.cursor.y = cursor.y;
-//         newBox.cursor.z = cursor.z;
-
-//         newBox.geometry.vertices[1] = newBox.cursor.clone();
-
-//         var v1 = cursor.clone();
-//         var v2 = newBox.anchor.clone();
-        
-//         // for rotation
-//         rotate(v1, v2, angle);
-
-
-//         var minVector = getMin(v1, v2);
-//         var maxVector = getMax(v1, v2);
-//         var topLeft = getTopLeft(v1, v2);
-//         var bottomRight = getBottomRight(v1, v2);
-
-//         newBox.boundingBox.set(minVector.clone(), maxVector.clone());
-//         // for rotation
-//         newBox.boxHelper.rotation.y = angle;
-
-//         rotate(minVector, maxVector, -angle);
-//         rotate(topLeft, bottomRight, -angle);
-
-//         // set corner points
-//         newBox.geometry.vertices[0] = maxVector.clone();
-//         newBox.geometry.vertices[1] = minVector.clone();
-//         newBox.geometry.vertices[2] = topLeft.clone();
-//         newBox.geometry.vertices[3] = bottomRight.clone();
-
-//         rotate(minVector, maxVector, angle);
-//         rotate(topLeft, bottomRight, angle);
-
-//         newBox.rotatedGeometry.vertices[0] = maxVector;
-//         newBox.rotatedGeometry.vertices[1] = minVector;
-//         newBox.rotatedGeometry.vertices[2] = topLeft;
-//         newBox.rotatedGeometry.vertices[3] = bottomRight;
-
-//         newBox.geometry.verticesNeedUpdate = true;
-//     }
-// }
-
-
 
 function onDocumentMouseUp( event ) {
     event.preventDefault();
@@ -370,19 +294,23 @@ function onDocumentMouseUp( event ) {
 function onDocumentMouseDown( event ) {
 
     event.preventDefault();
-    // mouse2D.x = ( event.clientX / window.innerWidth ) * 2 - 1;
-    // mouse2D.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
-    // console.log(mouse2D);
+
     if (!controls.enabled) {
         mouseDown = true;
         anchor = get3DCoord();
         var intersection = intersectWithCorner();
 
         if (intersection != null) {
-            console.log("intersection");
             isResizing = true;
             resizeBox = intersection[0];
+
+
+            var closestIdx = closestPoint(anchor, resizeBox.geometry.vertices);
+            resizeBox.anchor = resizeBox.geometry.vertices[getOppositeCorner(closestIdx)].clone();
+
+
         } else {
+            angle = camera.rotation.z;
             var v = anchor.clone();
             anchor.x += .000001;
             anchor.y -= .000001;
@@ -391,7 +319,7 @@ function onDocumentMouseDown( event ) {
             newBoxHelper = new THREE.Box3Helper( newBoundingBox, 0xffff00 );
             anchor = anchor.clone();
 
-            newBox = new Box(anchor, v, newBoundingBox, newBoxHelper);
+            newBox = new Box(anchor, v, angle, newBoundingBox, newBoxHelper);
         }
     }
 }
@@ -407,18 +335,13 @@ function intersectWithCorner() {
         var b = boundingBoxes[i];
         var intersection = getIntersection(b);
         if (intersection) {
-            
-            // console.log(shortestDistance);
-            // console.log(intersection.distance < shortestDistance);
             if (intersection.distance < shortestDistance) {
                 closestBox = b;
                 closestCorner = intersection.point;
+                shortestDistance = intersection.distance;
             }
         }
-        // console.log("intersection: ", intersection);
-        
     }
-    // console.log("closest corner: ", closestCorner);
     if (closestCorner) {
         return [closestBox, closestCorner];
     } else {
@@ -432,20 +355,23 @@ function getIntersection(b) {
     var dir = temp.sub( camera.position ).normalize();
     var distance = - camera.position.y / dir.y;
     var pos = camera.position.clone().add( dir.multiplyScalar( distance ) );
-    console.log("cursor: ", pos);
-    console.log("mouse: ", mouse2D);
-    console.log("rotated 0: ", b.rotatedPoints.geometry.vertices[0]);
-    // console.log("rotated 1: ", b.rotatedGeometry.vertices[1]);
-    // console.log("rotated 2: ", b.rotatedGeometry.vertices[2]);
-    // console.log("rotated 3: ", b.rotatedGeometry.vertices[3]);
-    raycaster.setFromCamera( mouse2D, camera );
-    console.log(raycaster.intersectObjects([b.points]));
-    console.log(raycaster.ray);
-    // console.log(b.points);
-    // console.log("cursor: ", b.rotatedPoints.geometry.vertices);
-    var intersections = raycaster.intersectObjects( [b.rotatedPoints] );
-    var intersection = ( intersections.length ) > 0 ? intersections[ 0 ] : null;
-    return intersection;
+    var shortestDistance = Number.POSITIVE_INFINITY;
+    var closestCorner = null;
+    for (var i = 0; i < b.geometry.vertices.length; i++) {
+        if (distance2D(pos, b.geometry.vertices[i]) < shortestDistance &&
+            distance2D(pos, b.geometry.vertices[i]) < distanceThreshold) {
+            shortestDistance = distance2D(pos, b.geometry.vertices[i]);
+            closestCorner = b.geometry.vertices[i];
+        }
+    }
+    if (closestCorner == null) {
+        return null;
+    }
+    return {distance: shortestDistance, point: closestCorner};
+}
+
+function distance2D(v1, v2) {
+    return Math.pow(Math.pow(v1.x - v2.x, 2) + Math.pow(v1.z - v2.z, 2), 0.5)
 }
 
 function get3DCoord() {
@@ -491,13 +417,22 @@ function closestPoint(p, vertices) {
     return closestIdx;
 }
 
+function getCurrentPosition() {
+    var temp = new THREE.Vector3(mouse2D.x, mouse2D.y, 0);
+    temp.unproject( camera );
+    var dir = temp.sub( camera.position ).normalize();
+    var distance = - camera.position.y / dir.y;
+    var pos = camera.position.clone().add( dir.multiplyScalar( distance ) );
+    return pos;
+}
+
 function render() {
 
     var intersection = intersectWithCorner();
     if (intersection) {
         var box = intersection[0];
         var p = intersection[1];
-        var closestIdx = closestPoint(p, box.rotatedGeometry.vertices);
+        var closestIdx = closestPoint(p, box.geometry.vertices);
         if (hoverBox) {
             hoverBox.colors[hoverIdx] = new THREE.Color( 7,0,0 );
             hoverBox.geometry.colorsNeedUpdate = true;
@@ -506,8 +441,6 @@ function render() {
         hoverBox = box;
         hoverIdx = closestIdx;
         box.colors[closestIdx] = new THREE.Color( 0,0,7 );
-        // console.log("hover:", intersection, closestIdx);
-        console.log("hover: ", box.rotatedGeometry.vertices);
         box.geometry.colorsNeedUpdate = true;
     } else {
         if (hoverBox) {
@@ -516,6 +449,18 @@ function render() {
         }
         hoverBox = null;
     }
+    var cursor = getCurrentPosition();
+    for (var i = 0; i < boundingBoxes.length; i++) {
+        if (boundingBoxes[i].boundingBox.containsPoint(cursor)) {
+            boundingBoxes[i].boxHelper.color = 0xffffff;
+            console.log("intersect");
+        } else {
+            boundingBoxes[i].boxHelper.color = 0xffff00;
+        }
+        // boundingBoxes[i].boxHelper.colorsNeedUpdate = true;
+    }
+    
+
     renderer.render( scene, camera );
 
 }
@@ -538,7 +483,6 @@ function generatePointCloudForCluster() {
 }
 
 function moveMode( event ) {
-    // console.log(camera.rotation);
     event.preventDefault();
     controls.enabled = true;
     move2D = false;
