@@ -16,7 +16,7 @@ var pointSize = 0.5;
 var data;
 var boundingBoxes = [];
 var image_loaded = false;
-
+var hoverBoxes = [];
 var newBox;
 var newBoundingBox;
 var newBoxHelper;
@@ -28,13 +28,14 @@ var currentPosition = new THREE.Vector3();
 var boxgeometry = new THREE.BoxGeometry( 1, 1, 1 );
 var boxmaterial = new THREE.MeshDepthMaterial( {opacity: .1} );
 var move2D = false;
-
+var selectedBox;
 var angle;
 var distanceThreshold = 1;
 var hoverIdx;
 var hoverBox;
 var resizeBox;
 var isResizing = false;
+var isMoving = false;
 
 var pointMaterial = new THREE.PointsMaterial( { size: pointSize * 4, vertexColors: THREE.VertexColors } );
 init();
@@ -51,8 +52,8 @@ function generatePointCloud( vertices, color ) {
     var colors = [];
 
     var k = 0;
-    var stride = 32;
-    for ( var i = 0, l = 0; i < l; i ++ ) {
+    var stride = 512;
+    for ( var i = 0, l = 1024 * 512; i < l; i ++ ) {
         // creates new vector from a cluster and adds to geometry
         var v = new THREE.Vector3( vertices[ stride * k + 1 ], 
             vertices[ stride * k + 2 ], vertices[ stride * k ] );
@@ -100,6 +101,9 @@ function Box(anchor, cursor, angle, boundingBox, boxHelper) {
 
     this.points.frustumCulled = false;
     this.added = false;
+
+
+
 }
 
 // called first, populates scene and initializes renderer
@@ -149,17 +153,55 @@ function init() {
     controls = new THREE.OrbitControls( camera, renderer.domElement );
 
     window.addEventListener( 'resize', onWindowResize, false );
-    document.getElementById('container').addEventListener( 'mousemove', onDocumentMouseMove, false );
-    document.getElementById('container').addEventListener( 'mousedown', onDocumentMouseDown, false );
-    document.getElementById('container').addEventListener( 'mouseup', onDocumentMouseUp, false );
-    document.addEventListener( 'mousemove', updateMouse, false );
+    // document.getElementById('container').addEventListener( 'mousemove', onDocumentMouseMove, false );
+    // document.getElementById('container').addEventListener( 'mousedown', onDocumentMouseDown, false );
+    // document.getElementById('container').addEventListener( 'mouseup', onDocumentMouseUp, false );
+    // document.addEventListener( 'mousemove', updateMouse, false );
     // document.getElementById( 'save' ).addEventListener( 'click', save, false );
     // document.getElementById( 'export' ).addEventListener( 'click', save_image, false );
     document.getElementById( 'move' ).addEventListener( 'click', moveMode, false );
     document.getElementById( 'move2D' ).addEventListener( 'click', move2DMode, false );
     document.getElementById( 'label' ).addEventListener( 'click', labelMode, false );
     document.getElementById( 'file_input' ).addEventListener( 'change', upload_file, false );
+    // document.addEventListener("keydown", KeyCheck);  //or however you are calling your method
 }
+
+function KeyCheck(event)
+{
+   var KeyID = event.keyCode;
+   switch(KeyID)
+   {
+      case 8: // backspace
+      deleteSelectedBox();
+      break; 
+      case 46: // delete
+      deleteSelectedBox();
+      break;
+      default:
+      break;
+   }
+}
+
+function deleteSelectedBox() {
+    if (selectedBox) {
+        scene.remove(selectedBox.points);
+        scene.remove(selectedBox.boxHelper);
+        for (var i = 0; i < hoverBoxes.length; i++) {
+            if (hoverBoxes[i] == selectedBox) {
+                hoverBoxes.splice(i, 1);
+                break;
+            }
+        }
+        for (var i = 0; i < boundingBoxes.length; i++) {
+            if (boundingBoxes[i] == selectedBox) {
+                boundingBoxes.splice(i, 1);
+                break;
+            }
+        }
+        selectedBox = null;
+    }
+}
+
 
 function getMin(v1, v2) {
     return new THREE.Vector3(Math.min(v1.x, v2.x), 
@@ -221,12 +263,6 @@ function getOppositeCorner(idx) {
 function resize(box, cursor) {
     if (cursor.x != box.anchor.x && cursor.y != box.anchor.y && cursor.z != box.anchor.z) {
 
-        box.cursor.x = cursor.x;
-        box.cursor.y = cursor.y;
-        box.cursor.z = cursor.z;
-
-        
-
         var v1 = cursor.clone();
         var v2 = box.anchor.clone();
 
@@ -242,7 +278,7 @@ function resize(box, cursor) {
         var topLeft = getTopLeft(v1, v2);
         var bottomRight = getBottomRight(v1, v2);
 
-        maxVector.y = 0.00001;
+        maxVector.y = 0.00001; // need to do this to make matrix invertible
 
         box.boundingBox.set(minVector.clone(), maxVector.clone());
         // for rotation
@@ -263,13 +299,17 @@ function resize(box, cursor) {
     }
 }
 function onDocumentMouseMove( event ) {
-
+    console.log("move");
     event.preventDefault();
     if (mouseDown == true) {
         var cursor = get3DCoord();
+
         if (isResizing) {
             cursor.y -= 0.00001;
             resize(resizeBox, cursor);
+        } else if (isMoving) {
+            moveBox(selectedBox, cursor);
+            changeBoundingBoxColor(selectedBox, new THREE.Color( 0,0,7 ));
         } else {
             if (newBox != null && !newBox.added) {
                 scene.add(newBox.points);
@@ -279,7 +319,108 @@ function onDocumentMouseMove( event ) {
             resize(newBox, cursor);
         }
     }
+
+    var cursor = getCurrentPosition();
+    if (!controls.enabled) {
+        updateHoverBoxes(cursor);
+    }
+
+    if (!controls.enabled) {
+            var intersection = intersectWithCorner();
+        if (intersection) {
+            var box = intersection[0];
+            var p = intersection[1];
+            var closestIdx = closestPoint(p, box.geometry.vertices);
+            if (hoverBox) {
+                hoverBox.colors[hoverIdx] = new THREE.Color( 7,0,0 );
+                hoverBox.geometry.colorsNeedUpdate = true;
+            }
+
+            hoverBox = box;
+            hoverIdx = closestIdx;
+            box.colors[closestIdx] = new THREE.Color( 0,0,7 );
+            box.geometry.colorsNeedUpdate = true;
+        } else {
+            if (hoverBox) {
+                hoverBox.colors[hoverIdx] = new THREE.Color( 7,0,0 );
+                hoverBox.geometry.colorsNeedUpdate = true;
+            }
+            hoverBox = null;
+        }
+    
+    }
+    
+    
+    
 }
+
+function moveBox(box, v) {
+    var dx = v.x - box.cursor.x;
+    var dz = v.z - box.cursor.z;
+
+    box.anchor.x += dx;
+    box.anchor.z += dz;
+    box.cursor = v.clone();
+    for (var i = 0; i < box.geometry.vertices.length; i++) {
+        var p = box.geometry.vertices[i];
+        p.x += dx;
+        p.z += dz;
+    }
+
+
+    var maxVector = box.geometry.vertices[0].clone();
+    var minVector = box.geometry.vertices[1].clone();
+    var topLeft = box.geometry.vertices[2].clone();
+    var bottomRight = box.geometry.vertices[3].clone();
+
+    rotate(maxVector, minVector, box.angle);
+    rotate(topLeft, bottomRight, box.angle);
+    maxVector.y += 0.0000001; // need to do this to make matrix invertible
+    box.boundingBox.set(minVector, maxVector);
+
+    box.geometry.verticesNeedUpdate = true;
+}
+
+function containsPoint(box, v) {
+    var center = getCenter(box.boundingBox.max, box.boundingBox.min);
+    var diff = v.clone();
+    diff.sub(center);
+    var v1 = v.clone();
+    var v2 = center;
+    v2.sub(diff);
+    rotate(v1, v2, box.angle);
+    return box.boundingBox.containsPoint(v2);
+}
+
+function updateHoverBoxes(v) {
+    if (!isMoving) {
+        hoverBoxes = [];
+        for (var i = 0; i < boundingBoxes.length; i++) {
+            var box = boundingBoxes[i];
+            if (containsPoint(box, v)) {
+                hoverBoxes.push(box);
+            }
+            if (box != selectedBox) {
+                changeBoundingBoxColor(box, 0xffff00);
+            }
+        }
+        if (hoverBoxes.length == 1) {
+            var box = hoverBoxes[0];
+            if (box != selectedBox) {
+                changeBoundingBoxColor(box, new THREE.Color( 7,0,0 ) );
+            }
+        }
+    }
+}
+
+function changeBoundingBoxColor(box, color) {
+    var boxHelperCopy = new THREE.Box3Helper( box.boundingBox, color );
+    scene.remove(box.boxHelper);
+    scene.add(boxHelperCopy);
+    box.boxHelper = boxHelperCopy;
+    boxHelperCopy.rotation.y = box.angle;
+}
+
 
 function onDocumentMouseUp( event ) {
     event.preventDefault();
@@ -289,6 +430,10 @@ function onDocumentMouseUp( event ) {
     }
     newBox = null;
     isResizing = false;
+    // if (isMoving) {
+    //     changeBoundingBoxColor(hoverBoxes[0], new THREE.Color( 7,0,0 ));
+    // }
+    isMoving = false;
 }
 
 function onDocumentMouseDown( event ) {
@@ -299,16 +444,23 @@ function onDocumentMouseDown( event ) {
         mouseDown = true;
         anchor = get3DCoord();
         var intersection = intersectWithCorner();
+        // update hover box
+        if (selectedBox && (hoverBoxes.length == 0 || hoverBoxes[0] != selectedBox)) {
+            changeBoundingBoxColor(selectedBox, 0xffff00);
+            selectedBox = null;
+            isMoving = false;
+        }
 
         if (intersection != null) {
             isResizing = true;
             resizeBox = intersection[0];
-
-
             var closestIdx = closestPoint(anchor, resizeBox.geometry.vertices);
             resizeBox.anchor = resizeBox.geometry.vertices[getOppositeCorner(closestIdx)].clone();
-
-
+        } else if (hoverBoxes.length == 1) {
+            selectedBox = hoverBoxes[0];
+            selectedBox.cursor = get3DCoord();
+            changeBoundingBoxColor(selectedBox, new THREE.Color( 0,0,7 ));
+            isMoving = true;
         } else {
             angle = camera.rotation.z;
             var v = anchor.clone();
@@ -403,7 +555,6 @@ function animate() {
 
 }
 
-var toggle = 0;
 
 function closestPoint(p, vertices) {
     var shortestDistance = Number.POSITIVE_INFINITY;
@@ -426,41 +577,10 @@ function getCurrentPosition() {
     return pos;
 }
 
+var toggle = 0;
 function render() {
-
-    var intersection = intersectWithCorner();
-    if (intersection) {
-        var box = intersection[0];
-        var p = intersection[1];
-        var closestIdx = closestPoint(p, box.geometry.vertices);
-        if (hoverBox) {
-            hoverBox.colors[hoverIdx] = new THREE.Color( 7,0,0 );
-            hoverBox.geometry.colorsNeedUpdate = true;
-        }
-
-        hoverBox = box;
-        hoverIdx = closestIdx;
-        box.colors[closestIdx] = new THREE.Color( 0,0,7 );
-        box.geometry.colorsNeedUpdate = true;
-    } else {
-        if (hoverBox) {
-            hoverBox.colors[hoverIdx] = new THREE.Color( 7,0,0 );
-            hoverBox.geometry.colorsNeedUpdate = true;
-        }
-        hoverBox = null;
-    }
-    var cursor = getCurrentPosition();
-    for (var i = 0; i < boundingBoxes.length; i++) {
-        if (boundingBoxes[i].boundingBox.containsPoint(cursor)) {
-            boundingBoxes[i].boxHelper.color = 0xffffff;
-            console.log("intersect");
-        } else {
-            boundingBoxes[i].boxHelper.color = 0xffff00;
-        }
-        // boundingBoxes[i].boxHelper.colorsNeedUpdate = true;
-    }
-    
-
+    toggle += clock.getDelta();
+    console.log(scene);
     renderer.render( scene, camera );
 
 }
@@ -572,6 +692,7 @@ function readData(e) {
     var rawLog = this.result;
     var floatarr = new Float32Array(rawLog)
     data = floatarr;
+    console.log(data.length / 4);
     show();
     animate();
 }
