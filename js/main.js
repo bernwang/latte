@@ -37,7 +37,7 @@ var resizeBox;
 var isResizing = false;
 var isMoving = false;
 
-var pointMaterial = new THREE.PointsMaterial( { size: pointSize * 4, vertexColors: THREE.VertexColors } );
+var pointMaterial = new THREE.PointsMaterial( { size: pointSize * 2, vertexColors: THREE.VertexColors } );
 init();
 // animate();
 
@@ -52,8 +52,8 @@ function generatePointCloud( vertices, color ) {
     var colors = [];
 
     var k = 0;
-    var stride = 512;
-    for ( var i = 0, l = 1024 * 512; i < l; i ++ ) {
+    var stride = 4;
+    for ( var i = 0, l = vertices.length / 4; i < l; i ++ ) {
         // creates new vector from a cluster and adds to geometry
         var v = new THREE.Vector3( vertices[ stride * k + 1 ], 
             vertices[ stride * k + 2 ], vertices[ stride * k ] );
@@ -65,7 +65,6 @@ function generatePointCloud( vertices, color ) {
 
         k++;
     }
-
     geometry.colors = colors;
     geometry.computeBoundingBox();
 
@@ -153,17 +152,17 @@ function init() {
     controls = new THREE.OrbitControls( camera, renderer.domElement );
 
     window.addEventListener( 'resize', onWindowResize, false );
-    // document.getElementById('container').addEventListener( 'mousemove', onDocumentMouseMove, false );
-    // document.getElementById('container').addEventListener( 'mousedown', onDocumentMouseDown, false );
-    // document.getElementById('container').addEventListener( 'mouseup', onDocumentMouseUp, false );
-    // document.addEventListener( 'mousemove', updateMouse, false );
-    // document.getElementById( 'save' ).addEventListener( 'click', save, false );
+    document.getElementById('container').addEventListener( 'mousemove', onDocumentMouseMove, false );
+    document.getElementById('container').addEventListener( 'mousedown', onDocumentMouseDown, false );
+    document.getElementById('container').addEventListener( 'mouseup', onDocumentMouseUp, false );
+    document.addEventListener( 'mousemove', updateMouse, false );
+    document.getElementById( 'save' ).addEventListener( 'click', save, false );
     // document.getElementById( 'export' ).addEventListener( 'click', save_image, false );
     document.getElementById( 'move' ).addEventListener( 'click', moveMode, false );
     document.getElementById( 'move2D' ).addEventListener( 'click', move2DMode, false );
     document.getElementById( 'label' ).addEventListener( 'click', labelMode, false );
     document.getElementById( 'file_input' ).addEventListener( 'change', upload_file, false );
-    // document.addEventListener("keydown", KeyCheck);  //or however you are calling your method
+    document.addEventListener("keydown", KeyCheck);  //or however you are calling your method
 }
 
 function KeyCheck(event)
@@ -299,7 +298,6 @@ function resize(box, cursor) {
     }
 }
 function onDocumentMouseMove( event ) {
-    console.log("move");
     event.preventDefault();
     if (mouseDown == true) {
         var cursor = get3DCoord();
@@ -580,7 +578,6 @@ function getCurrentPosition() {
 var toggle = 0;
 function render() {
     toggle += clock.getDelta();
-    console.log(scene);
     renderer.render( scene, camera );
 
 }
@@ -692,7 +689,6 @@ function readData(e) {
     var rawLog = this.result;
     var floatarr = new Float32Array(rawLog)
     data = floatarr;
-    console.log(data.length / 4);
     show();
     animate();
 }
