@@ -640,19 +640,26 @@ function labelMode( event ) {
 }
 
 
+function OutputBox(box) {
+    var v1 = box.geometry.vertices[0];
+    var v2 = box.geometry.vertices[1];
+    var v3 = box.geometry.vertices[2];
+    var center = getCenter(v1, v2);
+    this.center = new THREE.Vector2(center.x, center.z);
+    this.width = distance2D(v1, v3);
+    this.length = distance2D(v2, v3);
+    this.angle = box.angle;
+} 
+
 function save() {
-    textContents = [];
-    var numHighlighted = 0
-    for (var i=0;i<pointcloud.geometry.vertices.length;i++) {
-        var point = pointcloud.geometry.vertices[i];
-        var highlighted = pointsWithSpheres.has(i) ? 1 : 0;
-        numHighlighted += highlighted;
-        string = "%f,%f,%f,%d\n".format(point.x, point.y, point.z, highlighted);
-        textContents.push(string);
-    }
-    console.log('Number of highlighted points: ' + numHighlighted.toString());
-    var blob = new Blob(textContents, {type: "text/plain;charset=utf-8"});
-    saveAs(blob, "labelled.csv");
+  var outputBoxes = []
+  for (var i = 0; i < boundingBoxes.length; i++) {
+    outputBoxes.push(new OutputBox(boundingBoxes[i]));
+  }
+  var output = {"bounding boxes": outputBoxes};
+  var stringifiedOutput = JSON.stringify(output);
+  var file = new File([stringifiedOutput], "test.json", {type: "/json;charset=utf-8"});
+  saveAs(file);
 }
 
 function save_image() {
