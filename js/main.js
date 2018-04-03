@@ -36,7 +36,7 @@ var hoverBox;
 var resizeBox;
 var isResizing = false;
 var isMoving = false;
-
+var grid;
 var pointMaterial = new THREE.PointsMaterial( { size: pointSize * 2, vertexColors: THREE.VertexColors } );
 init();
 // animate();
@@ -44,6 +44,53 @@ init();
 // Should be in init?
 var sphereGeometry, sphereMaterial;
 
+function calculateMean(arr) {
+    var total = 0;
+    for (var i = 0; i< arr.length; i++) {
+        total += arr[i];
+    }
+    return total / arr.length;
+}
+
+function standardDeviation(arr) {
+    var mean = calculateMean(arr);
+    var variance = 0;
+    for (var i = 0; i < arr.length; i++) {
+        variance += Math.pow(arr[i] - mean, 2);
+    }
+    variance = variance / arr.length;
+    return Math.pow(variance, 0.5);
+}
+
+function filter(arr, mean, thresh) {
+    var result = [];
+    for (var i = 0; i< arr.length; i++) {
+        if (Math.abs(arr[i] - mean) < thresh) {
+            result.push(arr[i]);
+        }
+    }
+    return result;
+}
+
+function getMinElement(arr) {
+    var min = Number.POSITIVE_INFINITY;
+    for (var i = 0; i< arr.length; i++) {
+        if (arr[i] < min) {
+            min = arr[i];
+        }
+    }
+    return min;
+}
+
+function getMaxElement(arr) {
+    var max = Number.NEGATIVE_INFINITY;
+    for (var i = 0; i< arr.length; i++) {
+        if (arr[i] > max) {
+            max = arr[i];
+        }
+    }
+    return max;
+}
 
 function generatePointCloud( vertices, color ) {
 
@@ -53,18 +100,46 @@ function generatePointCloud( vertices, color ) {
 
     var k = 0;
     var stride = 4;
+    var maxColor = Number.NEGATIVE_INFINITY;
+    var minColor = Number.POSITIVE_INFINITY;
+    var intensities = [];
     for ( var i = 0, l = vertices.length / 4; i < l; i ++ ) {
         // creates new vector from a cluster and adds to geometry
         var v = new THREE.Vector3( vertices[ stride * k + 1 ], 
             vertices[ stride * k + 2 ], vertices[ stride * k ] );
-
+        if (vertices[ stride * k + 2] > maxColor) {
+            maxColor = vertices[ stride * k + 2];
+        }
+        if (vertices[ stride * k + 2] < minColor) {
+            minColor = vertices[ stride * k + 2];
+        }
         geometry.vertices.push( v );
-
-        var intensity = ( 1 ) * 7;
-        colors[ k ] = ( color.clone().multiplyScalar( intensity ) );
+        intensities.push(vertices[ stride * k + 2]);
+        // var intensity = ( 1 ) * 7;
+        // colors[ k ] = ( color.clone().multiplyScalar( intensity ) );
 
         k++;
     }
+    var mean = calculateMean(intensities);
+    var sd = standardDeviation(intensities);
+    var filteredIntensities = filter(intensities, mean, 2 * sd);
+    var min = getMinElement(filteredIntensities);
+    var max = getMaxElement(filteredIntensities);
+    for ( var i = 0;  i < intensities.length; i ++ ) {
+        var intensity = intensities[i];
+        if (Math.abs(intensities[i] - mean) >= 2 * sd) {
+            intensity = 0;
+        } else {
+            intensity = (intensities[i] - min) / (max - min);
+        }
+        // var intensity = intensities[i];
+        if (i % 512 == 0) {
+            console.log(intensity);
+        }
+        colors[i] = ( color.clone().multiplyScalar( intensity * 2 ) );
+    }
+    console.log("min color: ", minColor);
+    console.log("max color: ", maxColor);
     geometry.colors = colors;
     geometry.computeBoundingBox();
 
@@ -122,12 +197,11 @@ function init() {
 
 
     sphereGeometry = new THREE.SphereGeometry( 0.1, 32, 32 );
-    sphereMaterial = new THREE.MeshBasicMaterial( { color: 0xff0000, shading: THREE.FlatShading } );
+    sphereMaterial = new THREE.MeshBasicMaterial( { color: 0xff0000, flatShading: THREE.FlatShading } );
 
     //
 
-    var grid = new THREE.GridHelper( 200, 20 );
-    grid.setColors( 0xffffff, 0xffffff );
+    grid = new THREE.GridHelper( 200, 20, 0xffffff, 0xffffff );
     scene.add( grid );
 
     //
@@ -299,6 +373,10 @@ function resize(box, cursor) {
 }
 function onDocumentMouseMove( event ) {
     event.preventDefault();
+    // if (move2D) {
+    //     console.log(camera.rotation.z);
+    //     grid.rotation.y = camera.rotation.z;
+    // }
     if (mouseDown == true) {
         var cursor = get3DCoord();
 
@@ -437,7 +515,10 @@ function onDocumentMouseUp( event ) {
 function onDocumentMouseDown( event ) {
 
     event.preventDefault();
-
+    // if (move2D) {
+    //     console.log(camera.rotation.z);
+    //     grid.rotation.y = camera.rotation.z;
+    // }
     if (!controls.enabled) {
         mouseDown = true;
         anchor = get3DCoord();
@@ -579,7 +660,18 @@ var toggle = 0;
 function render() {
     toggle += clock.getDelta();
     renderer.render( scene, camera );
+    // console.log("1: ", grid.rotation);
+    // if (move2D) {
+    //     scene.remove(grid);
+    //     // grid.rotation.y = camera.rotation.y;
+    //     grid.rotateY(camera.rotation.y);
+    //     grid.updateMatrix();
+    //     scene.add(grid);
+    //     // grid.matrixWorldNeedsUpdate = true;
+    //     console.log(grid.rotation);
 
+    // }
+    
 }
 
 function show() {
@@ -612,8 +704,6 @@ function moveMode( event ) {
 
 function move2DMode( event ) {
     event.preventDefault();
-    controls.enabled = true;
-    controls.update();
     document.getElementById( 'move' ).className = "";
     document.getElementById( 'label' ).className = "";
     document.getElementById( 'move2D' ).className = "selected";
@@ -623,7 +713,11 @@ function move2DMode( event ) {
         camera.rotation.y = 0;
         controls.maxPolarAngle = 0;
         controls.minPolarAngle = 0;
+        camera.updateProjectionMatrix();
+        controls.reset();
     }
+    controls.enabled = true;
+    controls.update();
     move2D = true;
 }
 
