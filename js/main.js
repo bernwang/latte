@@ -578,8 +578,8 @@ function render() {
     if (move2D) {
         grid.rotation.y = camera.rotation.z;
         
-        grid.position.x = 10;
-        grid.position.y = 10;
+        // grid.position.x = 10;
+        // grid.position.y = 10;
         // console.log(camera.position);
         // grid.translate( camera.position.x, camera.position.y, 0);
     }
