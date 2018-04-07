@@ -25,7 +25,24 @@
                                 <!-- <li><a href="#" id="export"><i class="fa fa-picture-o"></i></a></li> -->
 				<li><a href="#" class="selected" id="move"><i class="fa material-icons">3d_rotation</i></a></li>
 				<li><a href="#" id="move2D"><i class="fa fa-arrows"></i></a></li>
-				<li><a href="#" id="label"><i class="fa fa-pencil"></i></a></li>
+				<li><a href="#" id="ids"><i class="fa fa-pencil"></i></a></li>
+				<li >
+					<div>
+						<table id="object-table">
+							<thead>
+								<th>
+									<td>Box</td>
+									<td>ID</td>
+								</th>
+							</thead>
+							<tbody>
+								
+							</tbody>
+							
+						</table>
+					</div>
+				</li>
+				<!-- <li><a href="#" id="label"><i class="fa fa-pencil"></i></a></li> -->
 
 			</ul>
 			<!-- <button onclick="toggle_reg_attr_panel()" class="leftsidebar_accordion" id="reg_attr_panel_button">Region Attributes</button> -->
@@ -58,6 +75,7 @@
 	<script src="js/libs/stats.min.js"></script>
     <!-- <script src="js/output.js?nocache"></script> -->
 	<script src="js/FileSaver.min.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 	<!-- <script src="js/attributes.js"></script> -->
 	<!-- <script src="js/TrackballControls.js"></script> -->
 	<script type="x-shader/x-vertex" id="vertexshader">
@@ -82,6 +100,7 @@
 			if ( gl_FragColor.a < ALPHATEST ) discard;
 		}
 	</script>
+	<script src="js/utils.js"></script>
 	<script src="js/main.js?nocache"></script>
 	</body>
 </html>

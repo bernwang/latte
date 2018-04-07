@@ -39,58 +39,13 @@ var isMoving = false;
 var grid;
 var pointMaterial = new THREE.PointsMaterial( { size: pointSize * 2, vertexColors: THREE.VertexColors } );
 init();
+
+var id = 0;
 // animate();
 
 // Should be in init?
 var sphereGeometry, sphereMaterial;
 
-function calculateMean(arr) {
-    var total = 0;
-    for (var i = 0; i< arr.length; i++) {
-        total += arr[i];
-    }
-    return total / arr.length;
-}
-
-function standardDeviation(arr) {
-    var mean = calculateMean(arr);
-    var variance = 0;
-    for (var i = 0; i < arr.length; i++) {
-        variance += Math.pow(arr[i] - mean, 2);
-    }
-    variance = variance / arr.length;
-    return Math.pow(variance, 0.5);
-}
-
-function filter(arr, mean, thresh) {
-    var result = [];
-    for (var i = 0; i< arr.length; i++) {
-        if (Math.abs(arr[i] - mean) < thresh) {
-            result.push(arr[i]);
-        }
-    }
-    return result;
-}
-
-function getMinElement(arr) {
-    var min = Number.POSITIVE_INFINITY;
-    for (var i = 0; i< arr.length; i++) {
-        if (arr[i] < min) {
-            min = arr[i];
-        }
-    }
-    return min;
-}
-
-function getMaxElement(arr) {
-    var max = Number.NEGATIVE_INFINITY;
-    for (var i = 0; i< arr.length; i++) {
-        if (arr[i] > max) {
-            max = arr[i];
-        }
-    }
-    return max;
-}
 
 function generatePointCloud( vertices, color ) {
 
@@ -115,31 +70,27 @@ function generatePointCloud( vertices, color ) {
         }
         geometry.vertices.push( v );
         intensities.push(vertices[ stride * k + 2]);
-        // var intensity = ( 1 ) * 7;
-        // colors[ k ] = ( color.clone().multiplyScalar( intensity ) );
-
         k++;
     }
+
     var mean = calculateMean(intensities);
     var sd = standardDeviation(intensities);
     var filteredIntensities = filter(intensities, mean, 2 * sd);
     var min = getMinElement(filteredIntensities);
     var max = getMaxElement(filteredIntensities);
+
     for ( var i = 0;  i < intensities.length; i ++ ) {
         var intensity = intensities[i];
-        if (Math.abs(intensities[i] - mean) >= 2 * sd) {
+        if (intensities[i] - mean >= 2 * sd) {
+            intensity = 1;
+        } else if (mean - intensities[i] >= 2 * sd) {
             intensity = 0;
         } else {
             intensity = (intensities[i] - min) / (max - min);
         }
-        // var intensity = intensities[i];
-        if (i % 512 == 0) {
-            console.log(intensity);
-        }
         colors[i] = ( color.clone().multiplyScalar( intensity * 2 ) );
     }
-    console.log("min color: ", minColor);
-    console.log("max color: ", maxColor);
+
     geometry.colors = colors;
     geometry.computeBoundingBox();
 
@@ -176,7 +127,8 @@ function Box(anchor, cursor, angle, boundingBox, boxHelper) {
     this.points.frustumCulled = false;
     this.added = false;
 
-
+    this.id = id;
+    this.object_id = null;
 
 }
 
@@ -234,13 +186,16 @@ function init() {
     // document.getElementById( 'export' ).addEventListener( 'click', save_image, false );
     document.getElementById( 'move' ).addEventListener( 'click', moveMode, false );
     document.getElementById( 'move2D' ).addEventListener( 'click', move2DMode, false );
-    document.getElementById( 'label' ).addEventListener( 'click', labelMode, false );
+    // document.getElementById( 'label' ).addEventListener( 'click', labelMode, false );
     document.getElementById( 'file_input' ).addEventListener( 'change', upload_file, false );
-    document.addEventListener("keydown", KeyCheck);  //or however you are calling your method
+    document.addEventListener("keydown", onKeyDown);  //or however you are calling your method
+    document.addEventListener("keyup", onKeyUp);
 }
 
-function KeyCheck(event)
-{
+function onKeyDown(event) {
+    if (event.ctrlKey) {
+        toggleControl(false);
+    }
    var KeyID = event.keyCode;
    switch(KeyID)
    {
@@ -250,15 +205,40 @@ function KeyCheck(event)
       case 46: // delete
       deleteSelectedBox();
       break;
+      case 68:
+      // toggleControl(false);
       default:
       break;
    }
+}
+
+function onKeyUp(event) {
+   var KeyID = event.keyCode;
+   switch(KeyID)
+   {
+      default:
+      toggleControl(true);
+      break;
+   }
+}
+
+function toggleControl(b) {
+    if (b) {
+        controls.enabled = b;
+        controls.update();
+    } else {
+        if (move2D) {
+            controls.enabled = b;
+            controls.update();
+        }
+    }
 }
 
 function deleteSelectedBox() {
     if (selectedBox) {
         scene.remove(selectedBox.points);
         scene.remove(selectedBox.boxHelper);
+        deleteRow(selectedBox.id);
         for (var i = 0; i < hoverBoxes.length; i++) {
             if (hoverBoxes[i] == selectedBox) {
                 hoverBoxes.splice(i, 1);
@@ -271,54 +251,17 @@ function deleteSelectedBox() {
                 break;
             }
         }
+
         selectedBox = null;
     }
 }
 
-
-function getMin(v1, v2) {
-    return new THREE.Vector3(Math.min(v1.x, v2.x), 
-                             Math.min(v1.y, v2.y), 
-                             Math.min(v1.z, v2.z))
+function deleteRow(id) {
+    var row = getRow(id);
+    row.remove();
 }
 
-function getMax(v1, v2) {
-    return new THREE.Vector3(Math.max(v1.x, v2.x), 
-                             Math.max(v1.y, v2.y), 
-                             Math.max(v1.z, v2.z))
-}
 
-function getTopLeft(v1, v2) {
-    return new THREE.Vector3(Math.min(v1.x, v2.x), 
-                             Math.max(v1.y, v2.y), 
-                             Math.max(v1.z, v2.z))
-}
-
-function getBottomRight(v1, v2) {
-    return new THREE.Vector3(Math.max(v1.x, v2.x), 
-                             Math.min(v1.y, v2.y), 
-                             Math.min(v1.z, v2.z))
-}
-
-function getCenter(v1, v2) {
-    return new THREE.Vector3((v1.x + v2.x) / 2.0, 0.0, (v1.z + v2.z) / 2.0);
-}
-
-function rotate(v1, v2, angle) {
-    center = getCenter(v1, v2);
-    v1.sub(center);
-    v2.sub(center);
-    var temp1 = v1.clone();
-    var temp2 = v2.clone();
-    v1.x = Math.cos(angle) * temp1.x - Math.sin(angle) * temp1.z;
-    v2.x = Math.cos(angle) * temp2.x - Math.sin(angle) * temp2.z;
-
-    v1.z = Math.sin(angle) * temp1.x + Math.cos(angle) * temp1.z;
-    v2.z = Math.sin(angle) * temp2.x + Math.cos(angle) * temp2.z;
-
-    v1.add(center);
-    v2.add(center);
-}
 
 function updateMouse( event ) {
     event.preventDefault();
@@ -326,12 +269,7 @@ function updateMouse( event ) {
     mouse2D.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
 }
 
-function getOppositeCorner(idx) {
-    if (idx == 0) {return 1;}
-    if (idx == 1) {return 0;}
-    if (idx == 2) {return 3;}
-    return 2;
-}
+
 
 function resize(box, cursor) {
     if (cursor.x != box.anchor.x && cursor.y != box.anchor.y && cursor.z != box.anchor.z) {
@@ -457,23 +395,12 @@ function moveBox(box, v) {
     box.geometry.verticesNeedUpdate = true;
 }
 
-function containsPoint(box, v) {
-    var center = getCenter(box.boundingBox.max, box.boundingBox.min);
-    var diff = v.clone();
-    diff.sub(center);
-    var v1 = v.clone();
-    var v2 = center;
-    v2.sub(diff);
-    rotate(v1, v2, box.angle);
-    return box.boundingBox.containsPoint(v2);
-}
-
 function updateHoverBoxes(v) {
     if (!isMoving) {
         hoverBoxes = [];
         for (var i = 0; i < boundingBoxes.length; i++) {
             var box = boundingBoxes[i];
-            if (containsPoint(box, v)) {
+            if (v && containsPoint(box, v)) {
                 hoverBoxes.push(box);
             }
             if (box != selectedBox) {
@@ -498,11 +425,69 @@ function changeBoundingBoxColor(box, color) {
 }
 
 
+function addBox(box) {
+    boundingBoxes.push(box);
+    id++;
+    addRow(box);
+}
+
+function addRow(box) {
+    $("#object-table tbody").append("<tr><td><input disabled type=text value="  + box.id+ ">" + "</input></td><td class='id'>" + box.id + "</td></tr>");
+}
+
+$("#object-table").on('mousedown', 'tbody tr', function() {
+    isMoving = false;
+    var boxId = $(this).find('.id').text();
+    var box = getBoxById(boxId);
+    selectRow(boxId);
+    selectBox(box, null);
+    selectedBox = null;
+    });
+$("#object-table").on('change paste keyup', 'tbody tr', updateObjectId);
+
+function updateObjectId() {
+    
+    var boxId = $(this).find(".id").text();
+    var input = $(this).find('input').val();
+    var box = getBoxById(boxId);
+    box.object_id = input;
+}
+
+function getRow(id) {
+    var row = $("#object-table tbody").find('td').filter(function() {
+        return $(this).text() == id.toString();}).closest("tr");
+    return row;
+}
+function selectRow(id) {
+    var row = getRow(id);
+    
+    $('#object-table').find('input').attr('disabled','disabled');
+    $(row).find('input').removeAttr('disabled');
+    $(row).find('input').get(0).focus();
+}
+
+function selectBox(box, cursor) {
+    selectedBox = box;
+    if (box && cursor) {
+        selectedBox.cursor = cursor;
+    }
+    updateHoverBoxes(cursor);
+    changeBoundingBoxColor(box, new THREE.Color( 0,0,7 ) );
+}
+
+function getBoxById(id) {
+    for (var i = 0; i < boundingBoxes.length; i++) {
+        if (boundingBoxes[i].id == id) {
+            return boundingBoxes[i];
+        }
+    }
+}
+
 function onDocumentMouseUp( event ) {
     event.preventDefault();
     mouseDown = false;
     if (newBox != null && newBox.added) {
-        boundingBoxes.push(newBox);
+        addBox(newBox);
     }
     newBox = null;
     isResizing = false;
@@ -536,10 +521,13 @@ function onDocumentMouseDown( event ) {
             var closestIdx = closestPoint(anchor, resizeBox.geometry.vertices);
             resizeBox.anchor = resizeBox.geometry.vertices[getOppositeCorner(closestIdx)].clone();
         } else if (hoverBoxes.length == 1) {
-            selectedBox = hoverBoxes[0];
-            selectedBox.cursor = get3DCoord();
-            changeBoundingBoxColor(selectedBox, new THREE.Color( 0,0,7 ));
+            // selectedBox = hoverBoxes[0];
+            // selectedBox.cursor = get3DCoord();
+            // changeBoundingBoxColor(selectedBox, new THREE.Color( 0,0,7 ));
             isMoving = true;
+            selectBox(hoverBoxes[0], get3DCoord());
+            selectRow(selectedBox.id);
+
         } else {
             angle = camera.rotation.z;
             var v = anchor.clone();
@@ -553,67 +541,6 @@ function onDocumentMouseDown( event ) {
             newBox = new Box(anchor, v, angle, newBoundingBox, newBoxHelper);
         }
     }
-}
-
-function intersectWithCorner() {
-    if (boundingBoxes.length == 0) {
-        return null;
-    }
-    var closestBox = null;
-    var closestCorner = null;
-    var shortestDistance = Number.POSITIVE_INFINITY;
-    for (var i = 0; i < boundingBoxes.length; i++) {
-        var b = boundingBoxes[i];
-        var intersection = getIntersection(b);
-        if (intersection) {
-            if (intersection.distance < shortestDistance) {
-                closestBox = b;
-                closestCorner = intersection.point;
-                shortestDistance = intersection.distance;
-            }
-        }
-    }
-    if (closestCorner) {
-        return [closestBox, closestCorner];
-    } else {
-        return null;
-    }
-}
-
-function getIntersection(b) {
-    var temp = new THREE.Vector3(mouse2D.x, mouse2D.y, 0);
-    temp.unproject( camera );
-    var dir = temp.sub( camera.position ).normalize();
-    var distance = - camera.position.y / dir.y;
-    var pos = camera.position.clone().add( dir.multiplyScalar( distance ) );
-    var shortestDistance = Number.POSITIVE_INFINITY;
-    var closestCorner = null;
-    for (var i = 0; i < b.geometry.vertices.length; i++) {
-        if (distance2D(pos, b.geometry.vertices[i]) < shortestDistance &&
-            distance2D(pos, b.geometry.vertices[i]) < distanceThreshold) {
-            shortestDistance = distance2D(pos, b.geometry.vertices[i]);
-            closestCorner = b.geometry.vertices[i];
-        }
-    }
-    if (closestCorner == null) {
-        return null;
-    }
-    return {distance: shortestDistance, point: closestCorner};
-}
-
-function distance2D(v1, v2) {
-    return Math.pow(Math.pow(v1.x - v2.x, 2) + Math.pow(v1.z - v2.z, 2), 0.5)
-}
-
-function get3DCoord() {
-    mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
-    mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
-    mouse.z = 0.5;
-    mouse.unproject( camera );
-    var dir = mouse.sub( camera.position ).normalize();
-    var distance = - camera.position.y / dir.y;
-    var pos = camera.position.clone().add( dir.multiplyScalar( distance ) );
-    return pos;
 }
 
 function onWindowResize() {
@@ -634,19 +561,6 @@ function animate() {
 
 }
 
-
-function closestPoint(p, vertices) {
-    var shortestDistance = Number.POSITIVE_INFINITY;
-    var closestIdx = null;
-    for (var i = 0; i < vertices.length; i++) {
-        if (p.distanceTo(vertices[i]) < shortestDistance) {
-            shortestDistance = p.distanceTo(vertices[i]);
-            closestIdx = i;
-        }
-    }
-    return closestIdx;
-}
-
 function getCurrentPosition() {
     var temp = new THREE.Vector3(mouse2D.x, mouse2D.y, 0);
     temp.unproject( camera );
@@ -660,18 +574,15 @@ var toggle = 0;
 function render() {
     toggle += clock.getDelta();
     renderer.render( scene, camera );
-    // console.log("1: ", grid.rotation);
-    // if (move2D) {
-    //     scene.remove(grid);
-    //     // grid.rotation.y = camera.rotation.y;
-    //     grid.rotateY(camera.rotation.y);
-    //     grid.updateMatrix();
-    //     scene.add(grid);
-    //     // grid.matrixWorldNeedsUpdate = true;
-    //     console.log(grid.rotation);
 
-    // }
-    
+    if (move2D) {
+        grid.rotation.y = camera.rotation.z;
+        
+        grid.position.x = 10;
+        grid.position.y = 10;
+        // console.log(camera.position);
+        // grid.translate( camera.position.x, camera.position.y, 0);
+    }
 }
 
 function show() {
@@ -695,7 +606,7 @@ function moveMode( event ) {
     event.preventDefault();
     controls.enabled = true;
     move2D = false;
-    document.getElementById( 'label' ).className = "";
+    // document.getElementById( 'label' ).className = "";
     document.getElementById( 'move2D' ).className = "";
     document.getElementById( 'move' ).className = "selected";
     controls.maxPolarAngle = 2 * Math.PI;
@@ -705,12 +616,12 @@ function moveMode( event ) {
 function move2DMode( event ) {
     event.preventDefault();
     document.getElementById( 'move' ).className = "";
-    document.getElementById( 'label' ).className = "";
+    // document.getElementById( 'label' ).className = "";
     document.getElementById( 'move2D' ).className = "selected";
     if (!move2D) {
         camera.position.set(0, 100, 0);
         camera.lookAt(new THREE.Vector3(0,0,0));
-        camera.rotation.y = 0;
+        // camera.rotation.y = 0;
         controls.maxPolarAngle = 0;
         controls.minPolarAngle = 0;
         camera.updateProjectionMatrix();
@@ -743,64 +654,5 @@ function OutputBox(box) {
     this.width = distance2D(v1, v3);
     this.length = distance2D(v2, v3);
     this.angle = box.angle;
-} 
-
-function save() {
-  var outputBoxes = []
-  for (var i = 0; i < boundingBoxes.length; i++) {
-    outputBoxes.push(new OutputBox(boundingBoxes[i]));
-  }
-  var output = {"bounding boxes": outputBoxes};
-  var stringifiedOutput = JSON.stringify(output);
-  var file = new File([stringifiedOutput], "test.json", {type: "/json;charset=utf-8"});
-  saveAs(file);
+    this.object_id = box.object_id;
 }
-
-function save_image() {
-    renderer.domElement.toBlob(function (blob) {
-        saveAs(blob, "image.png");
-    });
-}
-
-function upload_file() {
-    var x = document.getElementById("file_input");
-    if (x.files.length > 0) {
-        var file = x.files[0];
-        load_text_file(file, import_annotations_from_bin);
-    }
-}
-
-function import_annotations_from_bin(data) {
-  if ( data === '' || typeof(data) === 'undefined') {
-    return;
-  }
-}
-
-
-function load_text_file(text_file, callback_function) {
-  if (text_file) {
-    var text_reader = new FileReader();
-    text_reader.readAsArrayBuffer(text_file);
-    text_reader.onload = readData;
-    image_loaded = true;
-  }
-}
-
-function readData(e) {
-    var rawLog = this.result;
-    var floatarr = new Float32Array(rawLog)
-    data = floatarr;
-    show();
-    animate();
-}
-
-
-
-// https://stackoverflow.com/a/15327425/4855984
-String.prototype.format = function(){
-    var a = this, b;
-    for(b in arguments){
-        a = a.replace(/%[a-z]/,arguments[b]);
-    }
-    return a; // Make chainable
-};
