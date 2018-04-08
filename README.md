@@ -27,4 +27,4 @@ Lidar annotation tool using ray tracing and bounding boxes.
 # Lidar Format
 This version of the app assumes the lidar data to be stored in a binary float matrix (.bin extension). 
 Each column is a point, where the rows are in the following order: x, y, z, and intensity (little endian).
-See the 3D Velodyne point clouds in KITTI's dataset [GitHub](http://github.com) for example. 
+See the 3D Velodyne point clouds in [KITTI's dataset](http://www.cvlibs.net/datasets/kitti/raw_data.php) for example. 
