@@ -1,7 +1,6 @@
 # lidar-annotator
 Lidar annotation tool using ray tracing and bounding boxes.
 
-![lidar-annotator](http://www.giphy.com/gifs/9JwTgZ0CDHK4jO2mf2)
 # Usage
 1. Clone the repository
 2. To launch the app, just open index.html on your browser.
