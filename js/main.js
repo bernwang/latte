@@ -34,8 +34,10 @@ var distanceThreshold = 1;
 var hoverIdx;
 var hoverBox;
 var resizeBox;
+var rotatingBox;
 var isResizing = false;
 var isMoving = false;
+var isRotating = false;
 var grid;
 var pointMaterial = new THREE.PointsMaterial( { size: pointSize * 2, vertexColors: THREE.VertexColors } );
 init();
@@ -113,7 +115,7 @@ function Box(anchor, cursor, angle, boundingBox, boxHelper) {
     this.boundingBox = boundingBox; // Box3; sets the size of the box
     this.boxHelper = boxHelper; // BoxHelper; helps visualize the box
     this.colors = []; // colors of the corner points
-    for (var i = 0; i < 5; i++) {
+    for (var i = 0; i < 6; i++) {
         this.colors.push( this.color.clone().multiplyScalar( 7 ) );
     }
     this.geometry.colors = this.colors;
@@ -123,7 +125,7 @@ function Box(anchor, cursor, angle, boundingBox, boxHelper) {
     this.geometry.vertices.push(cursor);
     this.geometry.vertices.push(anchor.clone());
     this.geometry.vertices.push(cursor.clone());
-
+    this.geometry.vertices.push(getCenter(anchor.clone(), cursor.clone()));
     this.points.frustumCulled = false;
     this.added = false;
 
@@ -288,6 +290,8 @@ function resize(box, cursor) {
         var maxVector = getMax(v1, v2);
         var topLeft = getTopLeft(v1, v2);
         var bottomRight = getBottomRight(v1, v2);
+        var topCenter = getCenter(topLeft, maxVector);
+        var bottomCenter = getCenter(minVector, bottomRight);
 
         maxVector.y = 0.00001; // need to do this to make matrix invertible
 
@@ -298,27 +302,80 @@ function resize(box, cursor) {
         maxVector.y = 0;
         rotate(minVector, maxVector, -box.angle);
         rotate(topLeft, bottomRight, -box.angle);
-
+        rotate(topCenter, bottomCenter, -box.angle);
         // set corner points
         box.geometry.vertices[0] = maxVector.clone();
         box.geometry.vertices[1] = minVector.clone();
         box.geometry.vertices[2] = topLeft.clone();
         box.geometry.vertices[3] = bottomRight.clone();
-
+        box.geometry.vertices[4] = bottomCenter.clone();
 
         box.geometry.verticesNeedUpdate = true;
     }
 }
+
+function rotateBox(box, cursor) {
+    var maxVector = box.geometry.vertices[0].clone();
+    var minVector = box.geometry.vertices[1].clone();
+    var topLeft = box.geometry.vertices[2].clone();
+    var bottomRight = box.geometry.vertices[3].clone();
+    var topCenter = getCenter(maxVector, topLeft);
+    var bottomCenter = box.geometry.vertices[4].clone();
+
+    var center = getCenter(maxVector, minVector);
+    var angle = getAngle(center, bottomCenter, cursor, topCenter);
+
+    box.angle = box.angle + angle;
+    box.boxHelper.rotation.y = box.angle;
+
+
+    rotate(minVector, maxVector, -angle);
+    rotate(topLeft, bottomRight, -angle);
+    rotate(topCenter, bottomCenter, -angle);
+
+    box.geometry.vertices[0] = maxVector.clone();
+    box.geometry.vertices[1] = minVector.clone();
+    box.geometry.vertices[2] = topLeft.clone();
+    box.geometry.vertices[3] = bottomRight.clone();
+    box.geometry.vertices[4] = bottomCenter.clone();
+
+
+    box.geometry.verticesNeedUpdate = true;
+    
+}
+
+function getAngle(origin, v1, v2, v3) {
+    v1 = v1.clone();
+    v2 = v2.clone();
+    origin = origin.clone();
+    v1.sub(origin);
+    v2.sub(origin);
+    v1.y = 0;
+    v2.y = 0;
+    v1.normalize();
+    v2.normalize();
+
+    var angle = Math.acos(Math.min(1.0, v1.dot(v2)));
+    if (v3) {
+        v3 = v3.clone();
+        v3.sub(origin);
+        var d1 = distance2D(v1, v2);
+        rotate(v1, v3, angle);
+        var d2 = distance2D(v1, v2);
+        if (d2 < d1) {
+            angle = -angle;
+        }
+    }
+    return angle;
+}
 function onDocumentMouseMove( event ) {
     event.preventDefault();
-    // if (move2D) {
-    //     console.log(camera.rotation.z);
-    //     grid.rotation.y = camera.rotation.z;
-    // }
+
     if (mouseDown == true) {
         var cursor = get3DCoord();
-
-        if (isResizing) {
+        if (isRotating) {
+            rotateBox(rotatingBox, cursor);
+        } else if (isResizing) {
             cursor.y -= 0.00001;
             resize(resizeBox, cursor);
         } else if (isMoving) {
@@ -386,9 +443,12 @@ function moveBox(box, v) {
     var minVector = box.geometry.vertices[1].clone();
     var topLeft = box.geometry.vertices[2].clone();
     var bottomRight = box.geometry.vertices[3].clone();
+    var topCenter = getCenter(maxVector, topLeft);
+    var bottomCenter = box.geometry.vertices[4].clone();
 
     rotate(maxVector, minVector, box.angle);
     rotate(topLeft, bottomRight, box.angle);
+    rotate(topCenter, bottomCenter, box.angle);
     maxVector.y += 0.0000001; // need to do this to make matrix invertible
     box.boundingBox.set(minVector, maxVector);
 
@@ -418,8 +478,8 @@ function updateHoverBoxes(v) {
 
 function changeBoundingBoxColor(box, color) {
     var boxHelperCopy = new THREE.Box3Helper( box.boundingBox, color );
-    scene.remove(box.boxHelper);
     scene.add(boxHelperCopy);
+    scene.remove(box.boxHelper);
     box.boxHelper = boxHelperCopy;
     boxHelperCopy.rotation.y = box.angle;
 }
@@ -432,7 +492,7 @@ function addBox(box) {
 }
 
 function addRow(box) {
-    $("#object-table tbody").append("<tr><td><input disabled type=text value="  + box.id+ ">" + "</input></td><td class='id'>" + box.id + "</td></tr>");
+    $("#object-table tbody").append("<tr><td class='id'>" + box.id + "</td><td><input disabled type=text value="  + box.id+ ">" + "</input></td></tr>");
 }
 
 $("#object-table").on('mousedown', 'tbody tr', function() {
@@ -491,6 +551,7 @@ function onDocumentMouseUp( event ) {
     }
     newBox = null;
     isResizing = false;
+    isRotating = false;
     // if (isMoving) {
     //     changeBoundingBoxColor(hoverBoxes[0], new THREE.Color( 7,0,0 ));
     // }
@@ -508,6 +569,7 @@ function onDocumentMouseDown( event ) {
         mouseDown = true;
         anchor = get3DCoord();
         var intersection = intersectWithCorner();
+        console.log("intersection: ", intersection);
         // update hover box
         if (selectedBox && (hoverBoxes.length == 0 || hoverBoxes[0] != selectedBox)) {
             changeBoundingBoxColor(selectedBox, 0xffff00);
@@ -516,14 +578,18 @@ function onDocumentMouseDown( event ) {
         }
 
         if (intersection != null) {
-            isResizing = true;
-            resizeBox = intersection[0];
-            var closestIdx = closestPoint(anchor, resizeBox.geometry.vertices);
-            resizeBox.anchor = resizeBox.geometry.vertices[getOppositeCorner(closestIdx)].clone();
+            var box = intersection[0];
+            var closestIdx = closestPoint(anchor, box.geometry.vertices);
+            console.log("closest: ", closestIdx);
+            if (closestIdx == 4) {
+                isRotating = true;
+                rotatingBox = box;
+            } else {
+                isResizing = true;
+                resizeBox = box;
+                resizeBox.anchor = resizeBox.geometry.vertices[getOppositeCorner(closestIdx)].clone();
+            }
         } else if (hoverBoxes.length == 1) {
-            // selectedBox = hoverBoxes[0];
-            // selectedBox.cursor = get3DCoord();
-            // changeBoundingBoxColor(selectedBox, new THREE.Color( 0,0,7 ));
             isMoving = true;
             selectBox(hoverBoxes[0], get3DCoord());
             selectRow(selectedBox.id);
@@ -575,14 +641,9 @@ function render() {
     toggle += clock.getDelta();
     renderer.render( scene, camera );
 
-    if (move2D) {
-        grid.rotation.y = camera.rotation.z;
-        
-        // grid.position.x = 10;
-        // grid.position.y = 10;
-        // console.log(camera.position);
-        // grid.translate( camera.position.x, camera.position.y, 0);
-    }
+    // if (move2D) {
+    //     grid.rotation.y = camera.rotation.z;
+    // }
 }
 
 function show() {
