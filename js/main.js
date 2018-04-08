@@ -11,7 +11,7 @@ var clock;
 var mouseDown;
 var highlightMode = false;
 var threshold = 0.5;
-var pointSize = 0.5;
+var pointSize = 2;
 // data structures
 var data;
 var boundingBoxes = [];
@@ -39,7 +39,7 @@ var isResizing = false;
 var isMoving = false;
 var isRotating = false;
 var grid;
-var pointMaterial = new THREE.PointsMaterial( { size: pointSize * 2, vertexColors: THREE.VertexColors } );
+var pointMaterial = new THREE.PointsMaterial( { size: pointSize * 4, sizeAttenuation: false, vertexColors: THREE.VertexColors } );
 init();
 
 var id = 0;
@@ -96,7 +96,7 @@ function generatePointCloud( vertices, color ) {
     geometry.colors = colors;
     geometry.computeBoundingBox();
 
-    var material = new THREE.PointsMaterial( { size: pointSize, vertexColors: THREE.VertexColors } );
+    var material = new THREE.PointsMaterial( { size: pointSize, sizeAttenuation: false, vertexColors: THREE.VertexColors } );
     // creates pointcloud given vectors
     var pointcloud = new THREE.Points( geometry, material );
 
@@ -640,6 +640,8 @@ var toggle = 0;
 function render() {
     toggle += clock.getDelta();
     renderer.render( scene, camera );
+    // scene.remove(pointcloud);
+    // show();
 
     if (move2D) {
         grid.rotation.y = camera.rotation.z;
