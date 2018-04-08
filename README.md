@@ -20,7 +20,7 @@ Lidar annotation tool using ray tracing and bounding boxes.
 4. To "select" bounding box, click somewhere strictly inside a bounding box, and the borders will turn blue
 5. To delete bounding box, press the backspace/delete key while the bounding box is selected
 6. When a bounding box is selected, the input for its corresponding row in the labels table is focused.
-## Label mode
+## "Label" mode
 1. Click on an input in the "label table" and its corresponding bounding box will change color to blue.
 2. To change label, just change the value in the input, and the bounding box's object id will save automatically on input change
 
