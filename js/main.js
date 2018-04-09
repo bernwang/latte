@@ -11,7 +11,7 @@ var clock;
 var mouseDown;
 var highlightMode = false;
 var threshold = 0.5;
-var pointSize = 0.5;
+var pointSize = 1;
 // data structures
 var data;
 var boundingBoxes = [];
@@ -39,7 +39,7 @@ var isResizing = false;
 var isMoving = false;
 var isRotating = false;
 var grid;
-var pointMaterial = new THREE.PointsMaterial( { size: pointSize * 2, vertexColors: THREE.VertexColors } );
+var pointMaterial = new THREE.PointsMaterial( { size: pointSize * 2, sizeAttenuation: false, vertexColors: THREE.VertexColors } );
 init();
 
 var id = 0;
@@ -96,7 +96,7 @@ function generatePointCloud( vertices, color ) {
     geometry.colors = colors;
     geometry.computeBoundingBox();
 
-    var material = new THREE.PointsMaterial( { size: pointSize, vertexColors: THREE.VertexColors } );
+    var material = new THREE.PointsMaterial( { size: pointSize, sizeAttenuation: false, vertexColors: THREE.VertexColors } );
     // creates pointcloud given vectors
     var pointcloud = new THREE.Points( geometry, material );
 
@@ -492,7 +492,8 @@ function addBox(box) {
 }
 
 function addRow(box) {
-    $("#object-table tbody").append("<tr><td class='id'>" + box.id + "</td><td><input disabled type=text value="  + box.id+ ">" + "</input></td></tr>");
+    $("#object-table tbody").append("<tr><td class='id'>" + box.id + "</td><td><input type=text>" + "</input></td></tr>");
+    $("#object-table tbody input").last().focus();
 }
 
 $("#object-table").on('mousedown', 'tbody tr', function() {
