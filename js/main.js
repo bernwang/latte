@@ -12,6 +12,7 @@ var mouseDown;
 var highlightMode = false;
 var threshold = 0.5;
 var pointSize = 1;
+
 // data structures
 var data;
 var boundingBoxes = [];
@@ -40,6 +41,7 @@ var isMoving = false;
 var isRotating = false;
 var grid;
 var pointMaterial = new THREE.PointsMaterial( { size: pointSize * 2, sizeAttenuation: false, vertexColors: THREE.VertexColors } );
+
 init();
 
 var id = 0;
@@ -641,6 +643,7 @@ var toggle = 0;
 function render() {
     toggle += clock.getDelta();
     renderer.render( scene, camera );
+
 
     // if (move2D) {
     //     grid.rotation.y = camera.rotation.z;
