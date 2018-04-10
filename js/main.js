@@ -709,6 +709,23 @@ function labelMode( event ) {
     }
 }
 
+var maxSize = 2;
+var SettingsControls = function() {
+                       this.size = pointSize / maxSize;
+                };
+
+
+var gui = new dat.GUI();
+var settingsControls = new SettingsControls();
+var settingsFolder = gui.addFolder('settings');
+settingsFolder.add(settingsControls, 'size').min(0.0).max(1.0).step(0.05).onChange(function() {
+    pointcloud.material.size = settingsControls.size * maxSize;
+    pointMaterial.size = 4 * settingsControls.size * maxSize;
+});
+
+settingsFolder.open();
+
+
 
 function OutputBox(box) {
     var v1 = box.geometry.vertices[0];
