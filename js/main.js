@@ -40,8 +40,9 @@ var isResizing = false;
 var isMoving = false;
 var isRotating = false;
 var grid;
-var pointMaterial = new THREE.PointsMaterial( { size: pointSize * 2, sizeAttenuation: false, vertexColors: THREE.VertexColors } );
+var pointMaterial = new THREE.PointsMaterial( { size: pointSize * 4, sizeAttenuation: false, vertexColors: THREE.VertexColors } );
 
+var yCoords = [];
 init();
 
 var id = 0;
@@ -66,6 +67,8 @@ function generatePointCloud( vertices, color ) {
         // creates new vector from a cluster and adds to geometry
         var v = new THREE.Vector3( vertices[ stride * k + 1 ], 
             vertices[ stride * k + 2 ], vertices[ stride * k ] );
+
+        yCoords.push(vertices[ stride * k + 2 ]);
         if (vertices[ stride * k + 2] > maxColor) {
             maxColor = vertices[ stride * k + 2];
         }
@@ -645,9 +648,9 @@ function render() {
     renderer.render( scene, camera );
 
 
-    // if (move2D) {
-    //     grid.rotation.y = camera.rotation.z;
-    // }
+    if (move2D) {
+        grid.rotation.y = camera.rotation.z;
+    }
 }
 
 function show() {
@@ -676,6 +679,7 @@ function moveMode( event ) {
     document.getElementById( 'move' ).className = "selected";
     controls.maxPolarAngle = 2 * Math.PI;
     controls.minPolarAngle = -2 * Math.PI;
+    unprojectFromXZ();
 }
 
 function move2DMode( event ) {
@@ -690,11 +694,28 @@ function move2DMode( event ) {
         controls.maxPolarAngle = 0;
         controls.minPolarAngle = 0;
         camera.updateProjectionMatrix();
+        projectOntoXZ();
         controls.reset();
     }
     controls.enabled = true;
     controls.update();
     move2D = true;
+}
+
+function projectOntoXZ() {
+    for (var i = 0; i < pointcloud.geometry.vertices.length; i++) {
+        var v = pointcloud.geometry.vertices[i];
+        v.y = 0;
+    }
+    pointcloud.geometry.verticesNeedUpdate = true;
+}
+
+function unprojectFromXZ() {
+    for (var i = 0; i < pointcloud.geometry.vertices.length; i++) {
+        var v = pointcloud.geometry.vertices[i];
+        v.y = yCoords[i];
+    }
+    pointcloud.geometry.verticesNeedUpdate = true;
 }
 
 function labelMode( event ) {
@@ -725,6 +746,30 @@ settingsFolder.add(settingsControls, 'size').min(0.0).max(1.0).step(0.05).onChan
 
 settingsFolder.open();
 
+function reset() {
+    // if (grid) {
+    //     scene.remove(grid);
+    //     scene.remove(pointcloud);
+    // }
+    if (boundingBoxes) {
+        for (var i = 0; i < boundingBoxes.length; i++) {
+            box = boundingBoxes[i];
+            scene.remove(box.boxHelper);
+            scene.remove(box.points);
+            clearTable();
+        }
+        boundingBoxes = [];
+        yCoords = [];
+    }
+}
+
+function clearTable() {
+    for (var i = 0; i < boundingBoxes.length; i++) {
+            box = boundingBoxes[i];
+            deleteRow(box.id);
+        }
+    id = 0;
+}
 
 
 function OutputBox(box) {

@@ -202,6 +202,7 @@ function save_image() {
 function upload_file() {
     var x = document.getElementById("file_input");
     if (x.files.length > 0) {
+        reset();
         var file = x.files[0];
         load_text_file(file, import_annotations_from_bin);
     }
