@@ -42,7 +42,9 @@ var isRotating = false;
 var grid;
 var pointMaterial = new THREE.PointsMaterial( { size: pointSize * 4, sizeAttenuation: false, vertexColors: THREE.VertexColors } );
 
+var evaluator;
 var yCoords = [];
+var isRecording = false;
 init();
 
 var id = 0;
@@ -161,6 +163,8 @@ function init() {
     //
     controls = new THREE.OrbitControls( camera, renderer.domElement );
 
+    
+
     window.addEventListener( 'resize', onWindowResize, false );
     document.getElementById('container').addEventListener( 'mousemove', onDocumentMouseMove, false );
     document.getElementById('container').addEventListener( 'mousedown', onDocumentMouseDown, false );
@@ -172,37 +176,58 @@ function init() {
     document.getElementById( 'file_input' ).addEventListener( 'change', upload_file, false );
     document.addEventListener("keydown", onKeyDown);  //or however you are calling your method
     document.addEventListener("keyup", onKeyUp);
+    document.getElementById( 'record' ).addEventListener( 'click', toggleRecord, false );
 }
 
+function toggleRecord(event) {
+    // pause recording
+    if (isRecording) {
+        $("#record").text("Click to resume recording");
+        evaluator.pause_recording();
+        move2DMode(event);
+        isRecording = false;
+        
+    } else {
+        // resume recording
+        isRecording = true;
+        $("#record").text("Click to pause recording");
+        evaluator.resume_recording();
+    }
+}
 // controller for pressing hotkeys
 function onKeyDown(event) {
-    if (event.ctrlKey) {
-        toggleControl(false);
-    }
-   var KeyID = event.keyCode;
-   switch(KeyID)
-   {
-      case 8: // backspace
-      deleteSelectedBox();
-      break; 
-      case 46: // delete
-      deleteSelectedBox();
-      break;
-      case 68:
-      default:
-      break;
-   }
+    if (isRecording) {
+        if (event.ctrlKey) {
+            toggleControl(false);
+        }
+        var KeyID = event.keyCode;
+        switch(KeyID)
+        {
+            case 8: // backspace
+            deleteSelectedBox();
+            break; 
+            case 46: // delete
+            deleteSelectedBox();
+            break;
+            case 68:
+            default:
+            break;
+        }
+    }   
+    
 }
 
 // controller for releasing hotkeys
 function onKeyUp(event) {
-   var KeyID = event.keyCode;
-   switch(KeyID)
-   {
-      default:
-      toggleControl(true);
-      break;
-   }
+    if(isRecording) {
+        var KeyID = event.keyCode;
+        switch(KeyID)
+        {
+          default:
+          toggleControl(true);
+          break;
+        }
+    }
 }
 
 // toggles between move2D and move3D
@@ -242,7 +267,7 @@ function deleteSelectedBox() {
                 break;
             }
         }
-
+        evaluator.increment_delete_count();
         // removes selected box
         selectedBox = null;
     }
@@ -265,49 +290,50 @@ function updateMouse( event ) {
 // controller for resizing, rotating, translating, or hovering boxes and points
 function onDocumentMouseMove( event ) {
     event.preventDefault();
+    if (isRecording) {
+        if (mouseDown == true) {
+            var cursor = get3DCoord();
 
-    if (mouseDown == true) {
-        var cursor = get3DCoord();
+            if (isRotating) {
 
-        if (isRotating) {
+                rotateBox(rotatingBox, cursor);
 
-            rotateBox(rotatingBox, cursor);
+            } else if (isResizing) {
 
-        } else if (isResizing) {
+                // cursor's y coordinate nudged to make bounding box matrix invertible
+                cursor.y -= 0.00001;
 
-            // cursor's y coordinate nudged to make bounding box matrix invertible
-            cursor.y -= 0.00001;
+                resize(resizeBox, cursor);
 
-            resize(resizeBox, cursor);
+            } else if (isMoving) {
 
-        } else if (isMoving) {
+                moveBox(selectedBox, cursor);
+                changeBoundingBoxColor(selectedBox, new THREE.Color( 0,0,7 ));
 
-            moveBox(selectedBox, cursor);
-            changeBoundingBoxColor(selectedBox, new THREE.Color( 0,0,7 ));
+            } else {
 
-        } else {
+                // if we are initoally drawing a new bounding box, 
+                // we would like to add it to the scene
+                if (newBox != null && !newBox.added) {
+                    scene.add(newBox.points);
+                    scene.add( newBox.boxHelper );
+                    newBox.added = true;
+                }
 
-            // if we are initoally drawing a new bounding box, 
-            // we would like to add it to the scene
-            if (newBox != null && !newBox.added) {
-                scene.add(newBox.points);
-                scene.add( newBox.boxHelper );
-                newBox.added = true;
+                resize(newBox, cursor);
+
             }
-
-            resize(newBox, cursor);
-
         }
+
+        var cursor = getCurrentPosition();
+        if (!controls.enabled) {
+            // highlights all hover boxes that intersect with cursor
+            updateHoverBoxes(cursor);
+
+            // highlights closest corner point that intersects with cursor
+            highlightCorners();
+        } 
     }
-
-    var cursor = getCurrentPosition();
-    if (!controls.enabled) {
-        // highlights all hover boxes that intersect with cursor
-        updateHoverBoxes(cursor);
-
-        // highlights closest corner point that intersects with cursor
-        highlightCorners();
-    } 
 }
 
 
@@ -346,74 +372,39 @@ function updateHoverBoxes(v) {
 
 
 
-// method to add row to object id table
-function addRow(box) {
-    $("#object-table tbody").append("<tr><td class='id'>" + box.id + "</td><td><input type=text>" + "</input></td></tr>");
-    $("#object-table tbody input").last().focus();
-}
 
-// handler that highlights input and corresponding bounding box when input ic selected
-$("#object-table").on('mousedown', 'tbody tr', function() {
-    isMoving = false;
-    var boxId = $(this).find('.id').text();
-    var box = getBoxById(boxId);
-    selectRow(boxId);
-    selectBox(box, null);
-    selectedBox = null;
-    });
-
-// handler that saves input when input is changed
-$("#object-table").on('change paste keyup', 'tbody tr', updateObjectId);
-
-// method to update Box's object id
-function updateObjectId() {    
-    var boxId = $(this).find(".id").text();
-    var input = $(this).find('input').val();
-    var box = getBoxById(boxId);
-    box.object_id = input;
-}
-
-
-// method to get object id table row given id
-function getRow(id) {
-    var row = $("#object-table tbody").find('td').filter(function() {
-        return $(this).text() == id.toString();}).closest("tr");
-    return row;
-}
-
-// method to select row of object id table given ids
-function selectRow(id) {
-    var row = getRow(id);    
-    $('#object-table').find('input').attr('disabled','disabled');
-    $(row).find('input').removeAttr('disabled');
-    $(row).find('input').get(0).focus();
-}
-
-
-
-// gets box given its id
-function getBoxById(id) {
-    for (var i = 0; i < boundingBoxes.length; i++) {
-        if (boundingBoxes[i].id == id) {
-            return boundingBoxes[i];
-        }
-    }
-}
-
+var camera_angle;
 // controller for adding box
 function onDocumentMouseUp( event ) {
     event.preventDefault();
-    mouseDown = false;
-    if (newBox != null && newBox.added) {
-        addBox(newBox);
+    if (isRecording) {
+        mouseDown = false;
+        if (newBox != null && newBox.added) {
+            addBox(newBox);
+            evaluator.increment_add_box_count();
+        }
+        newBox = null;
+        if (isResizing) {
+            evaluator.increment_resize_count();
+        }
+        if (isMoving && selectedBox) {
+            evaluator.increment_translate_count();
+        }
+        if (isRotating) {
+            evaluator.increment_rotate_count();
+        }
+        isResizing = false;
+        isRotating = false;
+        // if (isMoving) {
+        //     changeBoundingBoxColor(hoverBoxes[0], new THREE.Color( 7,0,0 ));
+        // }
+        isMoving = false;
+
+
+        if (move2D) {
+            evaluator.increment_rotate_camera_count(camera.rotation.z);
+        }
     }
-    newBox = null;
-    isResizing = false;
-    isRotating = false;
-    // if (isMoving) {
-    //     changeBoundingBoxColor(hoverBoxes[0], new THREE.Color( 7,0,0 ));
-    // }
-    isMoving = false;
 }
 
 function onDocumentMouseDown( event ) {
@@ -423,46 +414,48 @@ function onDocumentMouseDown( event ) {
     //     console.log(camera.rotation.z);
     //     grid.rotation.y = camera.rotation.z;
     // }
-    if (!controls.enabled) {
-        mouseDown = true;
-        anchor = get3DCoord();
-        var intersection = intersectWithCorner();
-        // console.log("intersection: ", intersection);
-        // update hover box
-        if (selectedBox && (hoverBoxes.length == 0 || hoverBoxes[0] != selectedBox)) {
-            changeBoundingBoxColor(selectedBox, 0xffff00);
-            selectedBox = null;
-            isMoving = false;
-        }
-
-        if (intersection != null) {
-            var box = intersection[0];
-            var closestIdx = closestPoint(anchor, box.geometry.vertices);
-            // console.log("closest: ", closestIdx);
-            if (closestIdx == 4) {
-                isRotating = true;
-                rotatingBox = box;
-            } else {
-                isResizing = true;
-                resizeBox = box;
-                resizeBox.anchor = resizeBox.geometry.vertices[getOppositeCorner(closestIdx)].clone();
+    if (isRecording) {
+        if (!controls.enabled) {
+            mouseDown = true;
+            anchor = get3DCoord();
+            var intersection = intersectWithCorner();
+            // console.log("intersection: ", intersection);
+            // update hover box
+            if (selectedBox && (hoverBoxes.length == 0 || hoverBoxes[0] != selectedBox)) {
+                changeBoundingBoxColor(selectedBox, 0xffff00);
+                selectedBox = null;
+                isMoving = false;
             }
-        } else if (hoverBoxes.length == 1) {
-            isMoving = true;
-            selectBox(hoverBoxes[0], get3DCoord());
-            selectRow(selectedBox.id);
 
-        } else {
-            angle = camera.rotation.z;
-            var v = anchor.clone();
-            anchor.x += .000001;
-            anchor.y -= .000001;
-            anchor.z += .000001;
-            newBoundingBox = new THREE.Box3(anchor, v);
-            newBoxHelper = new THREE.Box3Helper( newBoundingBox, 0xffff00 );
-            anchor = anchor.clone();
+            if (intersection != null) {
+                var box = intersection[0];
+                var closestIdx = closestPoint(anchor, box.geometry.vertices);
+                // console.log("closest: ", closestIdx);
+                if (closestIdx == 4) {
+                    isRotating = true;
+                    rotatingBox = box;
+                } else {
+                    isResizing = true;
+                    resizeBox = box;
+                    resizeBox.anchor = resizeBox.geometry.vertices[getOppositeCorner(closestIdx)].clone();
+                }
+            } else if (hoverBoxes.length == 1) {
+                isMoving = true;
+                selectBox(hoverBoxes[0], get3DCoord());
+                selectRow(selectedBox.id);
 
-            newBox = new Box(anchor, v, angle, newBoundingBox, newBoxHelper);
+            } else {
+                angle = camera.rotation.z;
+                var v = anchor.clone();
+                anchor.x += .000001;
+                anchor.y -= .000001;
+                anchor.z += .000001;
+                newBoundingBox = new THREE.Box3(anchor, v);
+                newBoxHelper = new THREE.Box3Helper( newBoundingBox, 0xffff00 );
+                anchor = anchor.clone();
+
+                newBox = new Box(anchor, v, angle, newBoundingBox, newBoxHelper);
+            }
         }
     }
 }
@@ -524,34 +517,53 @@ function generatePointCloudForCluster() {
 
 function moveMode( event ) {
     event.preventDefault();
-    controls.enabled = true;
-    move2D = false;
-    // document.getElementById( 'label' ).className = "";
-    document.getElementById( 'move2D' ).className = "";
-    document.getElementById( 'move' ).className = "selected";
-    controls.maxPolarAngle = 2 * Math.PI;
-    controls.minPolarAngle = -2 * Math.PI;
-    unprojectFromXZ();
+    assertRecordMode();
+    if (isRecording) {
+        controls.enabled = true;
+        move2D = false;
+        // document.getElementById( 'label' ).className = "";
+        document.getElementById( 'move2D' ).className = "";
+        document.getElementById( 'move' ).className = "selected";
+        controls.maxPolarAngle = 2 * Math.PI;
+        controls.minPolarAngle = -2 * Math.PI;
+        unprojectFromXZ();
+
+
+
+        evaluator.resume_3D_time();
+    }
+}
+
+function assertRecordMode() {
+    if (!isRecording) {
+        alert("Resume recording to change modes");
+    }
 }
 
 function move2DMode( event ) {
     event.preventDefault();
-    document.getElementById( 'move' ).className = "";
-    // document.getElementById( 'label' ).className = "";
-    document.getElementById( 'move2D' ).className = "selected";
-    if (!move2D) {
-        camera.position.set(0, 100, 0);
-        camera.lookAt(new THREE.Vector3(0,0,0));
-        // camera.rotation.y = 0;
-        controls.maxPolarAngle = 0;
-        controls.minPolarAngle = 0;
-        camera.updateProjectionMatrix();
-        projectOntoXZ();
-        controls.reset();
+    if (isRecording) {
+        document.getElementById( 'move' ).className = "";
+        // document.getElementById( 'label' ).className = "";
+        document.getElementById( 'move2D' ).className = "selected";
+        if (!move2D) {
+            camera.position.set(0, 100, 0);
+            camera.lookAt(new THREE.Vector3(0,0,0));
+            // camera.rotation.y = 0;
+            controls.maxPolarAngle = 0;
+            controls.minPolarAngle = 0;
+            camera.updateProjectionMatrix();
+            projectOntoXZ();
+            controls.reset();
+
+
+            evaluator.pause_3D_time();
+        }
+        controls.enabled = true;
+        controls.update();
+        move2D = true;
     }
-    controls.enabled = true;
-    controls.update();
-    move2D = true;
+    
 }
 
 function projectOntoXZ() {
@@ -568,18 +580,6 @@ function unprojectFromXZ() {
         v.y = yCoords[i];
     }
     pointcloud.geometry.verticesNeedUpdate = true;
-}
-
-function labelMode( event ) {
-    event.preventDefault();
-    if (move2D) {
-        controls.enabled = false;
-        controls.update();
-        document.getElementById( 'label' ).className = "selected";
-        document.getElementById( 'move' ).className = "";
-        document.getElementById( 'move2D' ).className = "";
-
-    }
 }
 
 var maxSize = 2;
@@ -613,6 +613,7 @@ function reset() {
         boundingBoxes = [];
         yCoords = [];
     }
+    evaluator = new Evaluator(camera.rotation.z, boundingBoxes);
 }
 
 function clearTable() {

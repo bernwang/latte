@@ -205,6 +205,10 @@ function upload_file() {
         reset();
         var file = x.files[0];
         load_text_file(file, import_annotations_from_bin);
+        evaluator.resume_3D_time();
+        evaluator.resume_time();
+        $("#record").show();
+        isRecording = true;
     }
 }
 
