@@ -1,4 +1,4 @@
-# lidar-annotator
+# LiDAR-annotator
 LiDAR annotation tool using ray tracing and bounding boxes.
 
 # Usage
