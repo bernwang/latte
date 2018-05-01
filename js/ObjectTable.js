@@ -21,7 +21,7 @@ $("#object-table").on('mousedown', 'tbody tr', function() {
     var boxId = $(this).find('.id').text();
     var box = getBoxById(boxId);
     selectRow(boxId);
-    selectBox(box, null);
+    box.select(null);
     selectedBox = null;
     });
 

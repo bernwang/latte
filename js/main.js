@@ -45,6 +45,8 @@ var pointMaterial = new THREE.PointsMaterial( { size: pointSize * 4, sizeAttenua
 var evaluator;
 var yCoords = [];
 var isRecording = false;
+var evaluators;
+var evaluation;
 init();
 
 var id = 0;
@@ -103,7 +105,6 @@ function generatePointCloud( vertices, color ) {
 
     var k = 0;
     var stride = 4;
-    
     for ( var i = 0, l = vertices.length / 4; i < l; i ++ ) {
         // creates new vector from a cluster and adds to geometry
         var v = new THREE.Vector3( vertices[ stride * k + 1 ], 
@@ -163,21 +164,49 @@ function init() {
     //
     controls = new THREE.OrbitControls( camera, renderer.domElement );
 
-    
+    evaluators = [];
+    evaluation = new Evaluation();
 
     window.addEventListener( 'resize', onWindowResize, false );
     document.getElementById('container').addEventListener( 'mousemove', onDocumentMouseMove, false );
     document.getElementById('container').addEventListener( 'mousedown', onDocumentMouseDown, false );
     document.getElementById('container').addEventListener( 'mouseup', onDocumentMouseUp, false );
     document.addEventListener( 'mousemove', updateMouse, false );
-    document.getElementById( 'save' ).addEventListener( 'click', save, false );
+    // document.getElementById( 'save' ).addEventListener( 'click', save, false );
+    document.getElementById( 'next_frame' ).addEventListener( 'click', next_frame, false );
     document.getElementById( 'move' ).addEventListener( 'click', moveMode, false );
     document.getElementById( 'move2D' ).addEventListener( 'click', move2DMode, false );
-    document.getElementById( 'file_input' ).addEventListener( 'change', upload_file, false );
+    document.getElementById( 'file_input' ).addEventListener( 'change', upload_files, false );
     document.addEventListener("keydown", onKeyDown);  //or however you are calling your method
     document.addEventListener("keyup", onKeyUp);
     document.getElementById( 'record' ).addEventListener( 'click', toggleRecord, false );
 }
+
+function next_frame(event) {
+    if (evaluation.is_done()) {
+        alert("You have completed the evaluation! Thank you for participating!");
+        evaluation.add_evaluator(evaluator);
+        evaluation.write_output();
+        return;
+    } 
+    var response = confirm('Do you want to move on to the next frame? You cannot go back to edit previous frames.');
+
+    if (response == true) {
+        $("#next_frame").text("Next Frame (" + (evaluation.get_frame_number() + 1) + 
+                                "/" + evaluation.num_frames() + ")");
+        evaluation.add_evaluator(evaluator);
+        evaluation.next_frame();
+        reset();
+        data = evaluation.get_data();
+        show();
+        animate();
+
+        if (isRecording) {
+            toggleRecord(event);
+        }
+        select2DMode();
+    }
+} 
 
 function toggleRecord(event) {
     // pause recording
@@ -296,19 +325,19 @@ function onDocumentMouseMove( event ) {
 
             if (isRotating) {
 
-                rotateBox(rotatingBox, cursor);
+                rotatingBox.rotate(cursor);
 
             } else if (isResizing) {
 
                 // cursor's y coordinate nudged to make bounding box matrix invertible
                 cursor.y -= 0.00001;
 
-                resize(resizeBox, cursor);
+                resizeBox.resize(cursor);
 
             } else if (isMoving) {
 
-                moveBox(selectedBox, cursor);
-                changeBoundingBoxColor(selectedBox, new THREE.Color( 0,0,7 ));
+                selectedBox.translate(cursor);
+                selectedBox.changeBoundingBoxColor(new THREE.Color( 0,0,7 ));
 
             } else {
 
@@ -320,7 +349,7 @@ function onDocumentMouseMove( event ) {
                     newBox.added = true;
                 }
 
-                resize(newBox, cursor);
+                newBox.resize(cursor);
 
             }
         }
@@ -354,7 +383,7 @@ function updateHoverBoxes(v) {
 
             // checks if box is selectedBox, if so changes color back to default
             if (box != selectedBox) {
-                changeBoundingBoxColor(box, 0xffff00);
+                box.changeBoundingBoxColor(0xffff00);
             }
         }
 
@@ -362,7 +391,7 @@ function updateHoverBoxes(v) {
         if (hoverBoxes.length == 1) {
             var box = hoverBoxes[0];
             if (box != selectedBox) {
-                changeBoundingBoxColor(box, new THREE.Color( 7,0,0 ) );
+                box.changeBoundingBoxColor(new THREE.Color( 7,0,0 ) );
             }
         }
     }
@@ -422,7 +451,7 @@ function onDocumentMouseDown( event ) {
             // console.log("intersection: ", intersection);
             // update hover box
             if (selectedBox && (hoverBoxes.length == 0 || hoverBoxes[0] != selectedBox)) {
-                changeBoundingBoxColor(selectedBox, 0xffff00);
+                selectedBox.changeBoundingBoxColor(0xffff00);
                 selectedBox = null;
                 isMoving = false;
             }
@@ -441,7 +470,7 @@ function onDocumentMouseDown( event ) {
                 }
             } else if (hoverBoxes.length == 1) {
                 isMoving = true;
-                selectBox(hoverBoxes[0], get3DCoord());
+                hoverBoxes[0].select(get3DCoord());
                 selectRow(selectedBox.id);
 
             } else {
@@ -496,6 +525,14 @@ function render() {
     if (move2D) {
         grid.rotation.y = camera.rotation.z;
     }
+    updateFooter(getCurrentPosition());
+}
+
+function updateFooter(pos) {
+    var x = pos.z;
+    var y = pos.x;
+
+    $("#footer").find("p").text("x: " + x + ", y: " + y);
 }
 
 function show() {
@@ -504,6 +541,7 @@ function show() {
     if (pointcloud !== undefined) {
         scene.remove(pointcloud);
         rotation = pointcloud.rotation.y;
+        pointcloud = null;
     }
     // add pointcloud to scene
     pointcloud = generatePointCloudForCluster();
@@ -539,12 +577,27 @@ function assertRecordMode() {
         alert("Resume recording to change modes");
     }
 }
+function select2DMode() {
+    document.getElementById( 'move' ).className = "";
+    document.getElementById( 'move2D' ).className = "selected";
+    camera.position.set(0, 100, 0);
+    camera.lookAt(new THREE.Vector3(0,0,0));
+    // camera.rotation.y = 0;
+    controls.maxPolarAngle = 0;
+    controls.minPolarAngle = 0;
+    camera.updateProjectionMatrix();
+    projectOntoXZ();
+
+    controls.reset();
+    controls.enabled = true;
+    controls.update();
+    move2D = true;
+}
 
 function move2DMode( event ) {
     event.preventDefault();
     if (isRecording) {
         document.getElementById( 'move' ).className = "";
-        // document.getElementById( 'label' ).className = "";
         document.getElementById( 'move2D' ).className = "selected";
         if (!move2D) {
             camera.position.set(0, 100, 0);
@@ -611,9 +664,11 @@ function reset() {
             clearTable();
         }
         boundingBoxes = [];
+        yCoords = null;
         yCoords = [];
     }
-    evaluator = new Evaluator(camera.rotation.z, boundingBoxes);
+    
+    evaluator = new Evaluator(camera.rotation.z, boundingBoxes, evaluation.get_filename());
 }
 
 function clearTable() {
@@ -625,14 +680,3 @@ function clearTable() {
 }
 
 
-function OutputBox(box) {
-    var v1 = box.geometry.vertices[0];
-    var v2 = box.geometry.vertices[1];
-    var v3 = box.geometry.vertices[2];
-    var center = getCenter(v1, v2);
-    this.center = new THREE.Vector2(center.x, center.z);
-    this.width = distance2D(v1, v3);
-    this.length = distance2D(v2, v3);
-    this.angle = box.angle;
-    this.object_id = box.object_id;
-}

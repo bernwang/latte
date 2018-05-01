@@ -1,6 +1,6 @@
 function Box(anchor, cursor, angle, boundingBox, boxHelper) {
     this.id = id; // id (int) of Box
-    this.object_id = null; // object id (string)
+    this.object_id = 'car'; // object id (string)
     this.color = new THREE.Color( 1,0,0 ); // color of corner points
     this.angle = angle; // orientation of bounding box
     this.anchor = anchor; // point where bounding box was created
@@ -29,100 +29,172 @@ function Box(anchor, cursor, angle, boundingBox, boxHelper) {
     this.geometry.vertices.push(anchor.clone());
     this.geometry.vertices.push(cursor.clone());
     this.geometry.vertices.push(getCenter(anchor.clone(), cursor.clone()));
-    
-}
 
+   
+    // method for resizing bounding box given cursor coordinates
+    // 
+    // since BoxHelper3 draws a box in the same orientation as that of the point cloud, 
+    // we take the anchor and cursor, rotate them by the angle of the camera, draw the box, 
+    // then rotate the box back
+    this.resize = function(cursor) {
+        // checks and executes only if anchor does not overlap with cursor to avoid 0 determinant
+        if (cursor.x != this.anchor.x && cursor.y != this.anchor.y && cursor.z != this.anchor.z) {
 
-// method for resizing bounding box given cursor coordinates
-// 
-// since BoxHelper3 draws a box in the same orientation as that of the point cloud, 
-// we take the anchor and cursor, rotate them by the angle of the camera, draw the box, 
-// then rotate the box back
-function resize(box, cursor) {
-    // checks and executes only if anchor does not overlap with cursor to avoid 0 determinant
-    if (cursor.x != box.anchor.x && cursor.y != box.anchor.y && cursor.z != box.anchor.z) {
+            var v1 = cursor.clone();
+            var v2 = this.anchor.clone();
 
-        var v1 = cursor.clone();
-        var v2 = box.anchor.clone();
+            v1.y = 0;
+            v2.y = 0;
+            
+            // rotate cursor and anchor
+            rotate(v1, v2, this.angle);
 
-        v1.y = 0;
-        v2.y = 0;
-        
-        // rotate cursor and anchor
-        rotate(v1, v2, box.angle);
+            // calculating corner points and rotating point
+            var minVector = getMin(v1, v2);
+            var maxVector = getMax(v1, v2);
+            var topLeft = getTopLeft(v1, v2);
+            var bottomRight = getBottomRight(v1, v2);
+            var topCenter = getCenter(topLeft, maxVector);
+            var bottomCenter = getCenter(minVector, bottomRight);
 
-        // calculating corner points and rotating point
-        var minVector = getMin(v1, v2);
-        var maxVector = getMax(v1, v2);
-        var topLeft = getTopLeft(v1, v2);
-        var bottomRight = getBottomRight(v1, v2);
-        var topCenter = getCenter(topLeft, maxVector);
-        var bottomCenter = getCenter(minVector, bottomRight);
+            // need to do this to make matrix invertible
+            maxVector.y = 0.00001; 
 
-        // need to do this to make matrix invertible
-        maxVector.y = 0.00001; 
+            // setting bounding box limits
+            this.boundingBox.set(minVector.clone(), maxVector.clone());
 
-        // setting bounding box limits
-        box.boundingBox.set(minVector.clone(), maxVector.clone());
+            // rotate BoxHelper back
+            this.boxHelper.rotation.y = this.angle;
 
-        // rotate BoxHelper back
-        box.boxHelper.rotation.y = box.angle;
+            // setting y coordinate back to zero since we are done with drawing
+            maxVector.y = 0;
 
-        // setting y coordinate back to zero since we are done with drawing
-        maxVector.y = 0;
+            // rotate back the corner points
+            rotate(minVector, maxVector, -this.angle);
+            rotate(topLeft, bottomRight, -this.angle);
+            rotate(topCenter, bottomCenter, -this.angle);
 
-        // rotate back the corner points
-        rotate(minVector, maxVector, -box.angle);
-        rotate(topLeft, bottomRight, -box.angle);
-        rotate(topCenter, bottomCenter, -box.angle);
+            // set updated corner points used to resize box
+            this.geometry.vertices[0] = maxVector.clone();
+            this.geometry.vertices[1] = minVector.clone();
+            this.geometry.vertices[2] = topLeft.clone();
+            this.geometry.vertices[3] = bottomRight.clone();
+            this.geometry.vertices[4] = bottomCenter.clone();
 
-        // set updated corner points used to resize box
-        box.geometry.vertices[0] = maxVector.clone();
-        box.geometry.vertices[1] = minVector.clone();
-        box.geometry.vertices[2] = topLeft.clone();
-        box.geometry.vertices[3] = bottomRight.clone();
-        box.geometry.vertices[4] = bottomCenter.clone();
+            // tell scene to update corner points
+            this.geometry.verticesNeedUpdate = true;
+        }
+    }
+
+    // method to rotate bounding box by clicking and dragging rotate point, 
+    // which is the top center point on the bounding box
+    this.rotate = function(cursor) {
+        // get corner points
+        var maxVector = this.geometry.vertices[0].clone();
+        var minVector = this.geometry.vertices[1].clone();
+        var topLeft = this.geometry.vertices[2].clone();
+        var bottomRight = this.geometry.vertices[3].clone();
+        var topCenter = getCenter(maxVector, topLeft);
+        var bottomCenter = this.geometry.vertices[4].clone();
+
+        // get relative angle of cursor with respect to 
+        var center = getCenter(maxVector, minVector);
+        var angle = getAngle(center, bottomCenter, cursor, topCenter);
+
+        // update angle of Box and bounding box
+        this.angle = this.angle + angle;
+        this.boxHelper.rotation.y = this.angle;
+
+        // rotate and update corner points
+        rotate(minVector, maxVector, -angle);
+        rotate(topLeft, bottomRight, -angle);
+        rotate(topCenter, bottomCenter, -angle);
+
+        this.geometry.vertices[0] = maxVector.clone();
+        this.geometry.vertices[1] = minVector.clone();
+        this.geometry.vertices[2] = topLeft.clone();
+        this.geometry.vertices[3] = bottomRight.clone();
+        this.geometry.vertices[4] = bottomCenter.clone();
 
         // tell scene to update corner points
-        box.geometry.verticesNeedUpdate = true;
+        this.geometry.verticesNeedUpdate = true;
+        
+    }
+
+    // method to translate bounding box given a reference point
+    this.translate = function(v) {
+        // get difference in x and z coordinates between cursor when 
+        // box was selected and current cursor position
+        var dx = v.x - this.cursor.x;
+        var dz = v.z - this.cursor.z;
+
+        // update all points related to box by dx and dz
+        this.anchor.x += dx;
+        this.anchor.z += dz;
+        this.cursor = v.clone();
+        for (var i = 0; i < this.geometry.vertices.length; i++) {
+            var p = this.geometry.vertices[i];
+            p.x += dx;
+            p.z += dz;
+        }
+
+        // shift bounding box given new corner points
+        var maxVector = this.geometry.vertices[0].clone();
+        var minVector = this.geometry.vertices[1].clone();
+        var topLeft = this.geometry.vertices[2].clone();
+        var bottomRight = this.geometry.vertices[3].clone();
+        var topCenter = getCenter(maxVector, topLeft);
+        var bottomCenter = this.geometry.vertices[4].clone();
+
+        rotate(maxVector, minVector, this.angle);
+        rotate(topLeft, bottomRight, this.angle);
+        rotate(topCenter, bottomCenter, this.angle);
+
+        // need to do this to make matrix invertible
+        maxVector.y += 0.0000001; 
+
+        this.boundingBox.set(minVector, maxVector);
+
+        // tell scene to update corner points
+        this.geometry.verticesNeedUpdate = true;
+    }
+
+    // method to highlight box given cursor
+    this.select = function(cursor) {
+        selectedBox = this;
+        if (this && cursor) {
+            selectedBox.cursor = cursor;
+        }
+        updateHoverBoxes(cursor);
+        this.changeBoundingBoxColor(new THREE.Color( 0,0,7 ) );
+    }
+
+
+    // changes and updates a box's point's color given point index and color
+    this.changePointColor = function(idx, color) {
+        this.colors[idx] = color;
+        this.geometry.colorsNeedUpdate = true;
+    }
+    // method to change color of bounding box
+    this.changeBoundingBoxColor = function(color) {
+        var boxHelperCopy = new THREE.Box3Helper( this.boundingBox, color );
+        scene.add(boxHelperCopy);
+        scene.remove(this.boxHelper);
+        this.boxHelper = boxHelperCopy;
+        boxHelperCopy.rotation.y = this.angle;
+    }
+
+    this.output = function() {
+        return new OutputBox(this);
     }
 }
-
-
-// method to rotate bounding box by clicking and dragging rotate point, 
-// which is the top center point on the bounding box
-function rotateBox(box, cursor) {
-    // get corner points
-    var maxVector = box.geometry.vertices[0].clone();
-    var minVector = box.geometry.vertices[1].clone();
-    var topLeft = box.geometry.vertices[2].clone();
-    var bottomRight = box.geometry.vertices[3].clone();
-    var topCenter = getCenter(maxVector, topLeft);
-    var bottomCenter = box.geometry.vertices[4].clone();
-
-    // get relative angle of cursor with respect to 
-    var center = getCenter(maxVector, minVector);
-    var angle = getAngle(center, bottomCenter, cursor, topCenter);
-
-    // update angle of Box and bounding box
-    box.angle = box.angle + angle;
-    box.boxHelper.rotation.y = box.angle;
-
-    // rotate and update corner points
-    rotate(minVector, maxVector, -angle);
-    rotate(topLeft, bottomRight, -angle);
-    rotate(topCenter, bottomCenter, -angle);
-
-    box.geometry.vertices[0] = maxVector.clone();
-    box.geometry.vertices[1] = minVector.clone();
-    box.geometry.vertices[2] = topLeft.clone();
-    box.geometry.vertices[3] = bottomRight.clone();
-    box.geometry.vertices[4] = bottomCenter.clone();
-
-    // tell scene to update corner points
-    box.geometry.verticesNeedUpdate = true;
     
-}
+
+
+
+
+
+
 
 // gets angle between v1 and v2 with respect to origin
 //
@@ -181,19 +253,19 @@ function highlightCorners() {
 
             // if there was a previously hovered box, change its color back to red
             if (hoverBox) {
-                changePointColor(hoverBox, hoverIdx, new THREE.Color(7, 0, 0));
+                hoverBox.changePointColor(hoverIdx, new THREE.Color(7, 0, 0));
             }
 
             // update hover box
             hoverBox = box;
             hoverIdx = closestIdx;
-            changePointColor(hoverBox, hoverIdx, new THREE.Color(0, 0, 7));
+            hoverBox.changePointColor(hoverIdx, new THREE.Color(0, 0, 7));
 
     } else {
 
         // change color of previously hovered box back to red
         if (hoverBox) {
-            changePointColor(hoverBox, hoverIdx, new THREE.Color(7, 0, 0));
+            hoverBox.changePointColor(hoverIdx, new THREE.Color(7, 0, 0));
         }
 
         // set hover box to null since there is no intersection
@@ -202,59 +274,10 @@ function highlightCorners() {
 }
 
 
-// changes and updates a box's point's color given point index and color
-function changePointColor(box, idx, color) {
-    box.colors[idx] = color;
-    box.geometry.colorsNeedUpdate = true;
-}
-
-// method to translate bounding box given a reference point
-function moveBox(box, v) {
-    // get difference in x and z coordinates between cursor when 
-    // box was selected and current cursor position
-    var dx = v.x - box.cursor.x;
-    var dz = v.z - box.cursor.z;
-
-    // update all points related to box by dx and dz
-    box.anchor.x += dx;
-    box.anchor.z += dz;
-    box.cursor = v.clone();
-    for (var i = 0; i < box.geometry.vertices.length; i++) {
-        var p = box.geometry.vertices[i];
-        p.x += dx;
-        p.z += dz;
-    }
-
-    // shift bounding box given new corner points
-    var maxVector = box.geometry.vertices[0].clone();
-    var minVector = box.geometry.vertices[1].clone();
-    var topLeft = box.geometry.vertices[2].clone();
-    var bottomRight = box.geometry.vertices[3].clone();
-    var topCenter = getCenter(maxVector, topLeft);
-    var bottomCenter = box.geometry.vertices[4].clone();
-
-    rotate(maxVector, minVector, box.angle);
-    rotate(topLeft, bottomRight, box.angle);
-    rotate(topCenter, bottomCenter, box.angle);
-
-    // need to do this to make matrix invertible
-    maxVector.y += 0.0000001; 
-
-    box.boundingBox.set(minVector, maxVector);
-
-    // tell scene to update corner points
-    box.geometry.verticesNeedUpdate = true;
-}
 
 
-// method to change color of bounding box
-function changeBoundingBoxColor(box, color) {
-    var boxHelperCopy = new THREE.Box3Helper( box.boundingBox, color );
-    scene.add(boxHelperCopy);
-    scene.remove(box.boxHelper);
-    box.boxHelper = boxHelperCopy;
-    boxHelperCopy.rotation.y = box.angle;
-}
+
+
 
 // method to add box to boundingBoxes and object id table
 function addBox(box) {
@@ -264,12 +287,15 @@ function addBox(box) {
 }
 
 
-// method to highlight box given cursor
-function selectBox(box, cursor) {
-    selectedBox = box;
-    if (box && cursor) {
-        selectedBox.cursor = cursor;
-    }
-    updateHoverBoxes(cursor);
-    changeBoundingBoxColor(box, new THREE.Color( 0,0,7 ) );
+
+function OutputBox(box) {
+    var v1 = box.geometry.vertices[0];
+    var v2 = box.geometry.vertices[1];
+    var v3 = box.geometry.vertices[2];
+    var center = getCenter(v1, v2);
+    this.center = new THREE.Vector2(-center.z, center.x);
+    this.width = distance2D(v1, v3);
+    this.length = distance2D(v2, v3);
+    this.angle = box.angle;
+    this.object_id = box.object_id;
 }
