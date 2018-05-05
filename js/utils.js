@@ -155,7 +155,7 @@ function getIntersection(b) {
     var closestCorner = null;
     for (var i = 0; i < b.geometry.vertices.length; i++) {
         if (distance2D(pos, b.geometry.vertices[i]) < shortestDistance &&
-            distance2D(pos, b.geometry.vertices[i]) < distanceThreshold) {
+            distance2D(pos, b.geometry.vertices[i]) < b.get_cursor_distance_threshold()) {
             shortestDistance = distance2D(pos, b.geometry.vertices[i]);
             closestCorner = b.geometry.vertices[i];
         }

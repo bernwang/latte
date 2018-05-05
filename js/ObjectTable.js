@@ -22,8 +22,20 @@ $("#object-table").on('mousedown', 'tbody tr', function() {
     var box = getBoxById(boxId);
     selectRow(boxId);
     box.select(null);
-    selectedBox = null;
+    selectedBox = box;
+    var center = box.get_center();
+    // console.log(center);
+    // camera.position.set(center.x, 100, center.y);
+    // camera.updateProjectionMatrix();
+    // controls.update();
+    
+    // console.log(camera.position);
+    // camera.lookAt(new THREE.Vector3(center.x,0,center.y));
+    
+    // controls.update();
     });
+
+
 
 // handler that saves input when input is changed
 $("#object-table").on('change', 'tbody tr', updateObjectId);

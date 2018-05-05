@@ -1,7 +1,7 @@
 function Box(anchor, cursor, angle, boundingBox, boxHelper) {
     this.id = id; // id (int) of Box
     this.object_id = 'car'; // object id (string)
-    this.color = new THREE.Color( 1,0,0 ); // color of corner points
+    this.color = hover_color.clone(); // color of corner points
     this.angle = angle; // orientation of bounding box
     this.anchor = anchor; // point where bounding box was created
     this.cursor = cursor.clone(); // cursor
@@ -30,6 +30,10 @@ function Box(anchor, cursor, angle, boundingBox, boxHelper) {
     this.geometry.vertices.push(cursor.clone());
     this.geometry.vertices.push(getCenter(anchor.clone(), cursor.clone()));
 
+    this.get_center = function() {
+        var center3D = getCenter(this.geometry.vertices[0], this.geometry.vertices[1]);
+        return new THREE.Vector2(center3D.x, center3D.z);
+    }
    
     // method for resizing bounding box given cursor coordinates
     // 
@@ -166,7 +170,8 @@ function Box(anchor, cursor, angle, boundingBox, boxHelper) {
             selectedBox.cursor = cursor;
         }
         updateHoverBoxes(cursor);
-        this.changeBoundingBoxColor(new THREE.Color( 0,0,7 ) );
+        // this.changeBoundingBoxColor(new THREE.Color( 0,0,7 ) );
+        this.changeBoundingBoxColor(selected_color);
     }
 
 
@@ -186,6 +191,11 @@ function Box(anchor, cursor, angle, boundingBox, boxHelper) {
 
     this.output = function() {
         return new OutputBox(this);
+    }
+
+    this.get_cursor_distance_threshold = function() {
+        return Math.min(distance2D(this.geometry.vertices[0], this.geometry.vertices[2]),
+            distance2D(this.geometry.vertices[0], this.geometry.vertices[1])) / 4;
     }
 }
     
@@ -253,19 +263,22 @@ function highlightCorners() {
 
             // if there was a previously hovered box, change its color back to red
             if (hoverBox) {
-                hoverBox.changePointColor(hoverIdx, new THREE.Color(7, 0, 0));
+                // hoverBox.changePointColor(hoverIdx, new THREE.Color(7, 0, 0));
+                hoverBox.changePointColor(hoverIdx, hover_color.clone());
             }
 
             // update hover box
             hoverBox = box;
             hoverIdx = closestIdx;
-            hoverBox.changePointColor(hoverIdx, new THREE.Color(0, 0, 7));
+            // hoverBox.changePointColor(hoverIdx, new THREE.Color(0, 0, 7));
+            hoverBox.changePointColor(hoverIdx, selected_color.clone());
 
     } else {
 
         // change color of previously hovered box back to red
         if (hoverBox) {
-            hoverBox.changePointColor(hoverIdx, new THREE.Color(7, 0, 0));
+            // hoverBox.changePointColor(hoverIdx, new THREE.Color(7, 0, 0));
+            hoverBox.changePointColor(hoverIdx, hover_color.clone());
         }
 
         // set hover box to null since there is no intersection

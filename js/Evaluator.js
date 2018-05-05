@@ -98,6 +98,9 @@ function OutputEvaluator(eval) {
 	this.rotate_camera_count = eval.rotate_camera_count;
 	this.filename = eval.filename;
 	this.bounding_boxes = [];
+	this.time_elapsed = eval.get_time_elapsed();
+	this._3D_time_elapsed = eval.get_3D_time_elapsed();
+	
 	for (var i = 0; i < eval.bounding_boxes.length; i++) {
 		this.bounding_boxes.push(eval.bounding_boxes[i].output());
 	}

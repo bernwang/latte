@@ -31,7 +31,6 @@ var boxmaterial = new THREE.MeshDepthMaterial( {opacity: .1} );
 var move2D = false;
 var selectedBox;
 var angle;
-var distanceThreshold = 1;
 var hoverIdx;
 var hoverBox;
 var resizeBox;
@@ -52,13 +51,16 @@ init();
 var id = 0;
 // animate();
 
-
+var mean, sd, filteredIntensities, min, max, intensities, colors;
+var selected_color = new THREE.Color(0, 0, 1);
+var hover_color = new THREE.Color(1, 0, 0);
+var default_color = new THREE.Color(0xffff00);
 
 function normalizeColors(vertices, color) {
     var maxColor = Number.NEGATIVE_INFINITY;
     var minColor = Number.POSITIVE_INFINITY;
-    var intensities = [];
-    var colors = [];
+    intensities = [];
+    colors = [];
 
     k = 0;
     var stride = 4;
@@ -75,11 +77,11 @@ function normalizeColors(vertices, color) {
         k++;
     }
 
-    var mean = calculateMean(intensities);
-    var sd = standardDeviation(intensities);
-    var filteredIntensities = filter(intensities, mean, 2 * sd);
-    var min = getMinElement(filteredIntensities);
-    var max = getMaxElement(filteredIntensities);
+    mean = calculateMean(intensities);
+    sd = standardDeviation(intensities);
+    filteredIntensities = filter(intensities, mean, 1 * sd);
+    min = getMinElement(filteredIntensities);
+    max = getMaxElement(filteredIntensities);
 
     // normalize colors
     // if greater than 2 sd from mean, set to max color
@@ -94,7 +96,12 @@ function normalizeColors(vertices, color) {
         } else {
             intensity = (intensities[i] - min) / (max - min);
         }
-        colors[i] = ( color.clone().multiplyScalar( intensity * 2 ) );
+        // colors[i] = ( color.clone().multiplyScalar( intensity * 2 ) );
+        colors[i] = ( new THREE.Color( intensity, 0, 1 - intensity).multiplyScalar(intensity * 5));
+
+        // if (colors[i].b > colors[i].r) {
+        //     colors[i] = colors[i].multiplyScalar(0);
+        // }
     }
     return colors;
 }
@@ -185,6 +192,7 @@ function init() {
 function next_frame(event) {
     if (evaluation.is_done()) {
         alert("You have completed the evaluation! Thank you for participating!");
+        evaluator.pause_recording();
         evaluation.add_evaluator(evaluator);
         evaluation.write_output();
         return;
@@ -199,7 +207,7 @@ function next_frame(event) {
         reset();
         data = evaluation.get_data();
         show();
-        animate();
+        // animate();
 
         if (isRecording) {
             toggleRecord(event);
@@ -337,8 +345,8 @@ function onDocumentMouseMove( event ) {
             } else if (isMoving) {
 
                 selectedBox.translate(cursor);
-                selectedBox.changeBoundingBoxColor(new THREE.Color( 0,0,7 ));
-
+                // selectedBox.changeBoundingBoxColor(new THREE.Color( 0,0,7 ));
+                selectedBox.changeBoundingBoxColor(selected_color.clone());
             } else {
 
                 // if we are initoally drawing a new bounding box, 
@@ -383,7 +391,7 @@ function updateHoverBoxes(v) {
 
             // checks if box is selectedBox, if so changes color back to default
             if (box != selectedBox) {
-                box.changeBoundingBoxColor(0xffff00);
+                box.changeBoundingBoxColor(default_color.clone());
             }
         }
 
@@ -391,7 +399,8 @@ function updateHoverBoxes(v) {
         if (hoverBoxes.length == 1) {
             var box = hoverBoxes[0];
             if (box != selectedBox) {
-                box.changeBoundingBoxColor(new THREE.Color( 7,0,0 ) );
+                // box.changeBoundingBoxColor(new THREE.Color( 7,0,0 ) );
+                box.changeBoundingBoxColor(hover_color.clone());
             }
         }
     }
@@ -532,7 +541,7 @@ function updateFooter(pos) {
     var x = pos.z;
     var y = pos.x;
 
-    $("#footer").find("p").text("x: " + x + ", y: " + y);
+    $("#footer").find("p").text("x: " + x + "\ny: " + y);
 }
 
 function show() {
@@ -620,10 +629,20 @@ function move2DMode( event ) {
 }
 
 function projectOntoXZ() {
+    var count = 0;
     for (var i = 0; i < pointcloud.geometry.vertices.length; i++) {
         var v = pointcloud.geometry.vertices[i];
-        v.y = 0;
+
+        if (colors[i].b > colors[i].r) {
+            count += 1;
+            v.y = -0.000001;
+        } else {
+            v.y = 0;
+        }
+
+        // v.y = 0;
     }
+    console.log(count);
     pointcloud.geometry.verticesNeedUpdate = true;
 }
 
@@ -644,7 +663,7 @@ var SettingsControls = function() {
 var gui = new dat.GUI();
 var settingsControls = new SettingsControls();
 var settingsFolder = gui.addFolder('settings');
-settingsFolder.add(settingsControls, 'size').min(0.0).max(1.0).step(0.05).onChange(function() {
+var size_slider = settingsFolder.add(settingsControls, 'size').min(0.0).max(1.0).step(0.05).onChange(function() {
     pointcloud.material.size = settingsControls.size * maxSize;
     pointMaterial.size = 4 * settingsControls.size * maxSize;
 });
@@ -655,7 +674,8 @@ function reset() {
     // if (grid) {
     //     scene.remove(grid);
     //     scene.remove(pointcloud);
-    // }
+    // 
+
     if (boundingBoxes) {
         for (var i = 0; i < boundingBoxes.length; i++) {
             box = boundingBoxes[i];
@@ -667,7 +687,6 @@ function reset() {
         yCoords = null;
         yCoords = [];
     }
-    
     evaluator = new Evaluator(camera.rotation.z, boundingBoxes, evaluation.get_filename());
 }
 
