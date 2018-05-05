@@ -1,11 +1,25 @@
-# lidar-annotator
+# LiDAR-annotator
 Lidar annotation tool using ray tracing and bounding boxes.
+
+# For people using the annotator for the efficiency test
+1. There are 10 frames (.bin files) in /test/velodyne_points/data. It is preferable that all 10 frames are annotated, but 
+2. You can load multiple frames at once. Frames take between 2-8 minutes to annonate based now how many objects are in the scene. I highly encourage loading a few frames at a time (~3-5), and doing them in batches, because data collected is exported after all selected frames are annotated. Please note that if the page is refreshed or if the window is closed, all progress is lost. 
+3. There is a record button so that you can pause the test if you want. Note that if you pause the test, you will be forced into "2D mode" and cannot draw boxes. Click on the button again to resume recording. Recording will be automatically paused when you move onto a new fram. 
+4. To move onto the next frame, click "Next frame". You cannot go back to a previous frame.
+5. Please look at the "controls" section to understand how to draw/edit bounding boxes. If you want a quickstart on annotating, please read "my strategy for annotating"
+6. After all frames in the batch are annotated, a JSON file will be exported. You can choose to name it whatever you want, as only the data stored is important. It is okay if the annotations are in several JSON files as annotating in batches is recommended. 
+7. Thank you for participating in the efficiency test! Your time and effort goes into making the LiDAR annotater better!
+
+
+# My strategy for annotating
+
+
 
 # Usage
 1. Clone the repository
 2. To launch the app, just open index.html on your browser.
 3. Load lidar data (see lidar format). 
-4. To draw a bounding box, simply hold your mouse down and drag across the screen. See "Controls" section to learn more about user interface. 
+4. To draw a bounding box, simply hold the "control" key down and click and drag. See "Controls" section to learn more about user interface. 
 5. To *export* your bounding boxes, click on the "save" button to the top-left.
 
 # Controls
