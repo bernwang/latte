@@ -76,6 +76,15 @@ nav a:hover {
 nav li + li {
     border-top:1px solid #444;
 }
+#draw_bounding_box_reminder {
+  font-size: 12px;
+  position: fixed;
+    left: 10px;
+    bottom: 0;
+    width: 200px;
+    text-align: left;
+}
+
 
 #footer {
   font-size: 12px;

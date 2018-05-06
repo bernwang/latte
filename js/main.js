@@ -52,7 +52,7 @@ var id = 0;
 // animate();
 
 var mean, sd, filteredIntensities, min, max, intensities, colors;
-var selected_color = new THREE.Color(0, 0, 1);
+var selected_color = new THREE.Color(0x78F5FF);
 var hover_color = new THREE.Color(1, 0, 0);
 var default_color = new THREE.Color(0xffff00);
 
@@ -534,10 +534,37 @@ function render() {
     if (move2D) {
         grid.rotation.y = camera.rotation.z;
     }
-    updateFooter(getCurrentPosition());
+    update_footer(getCurrentPosition());
 }
 
-function updateFooter(pos) {
+function update_footer(pos) {
+    var reminder_text = "";
+    if (isRecording) {
+        if (move2D) {
+            if (controls.enabled == true) {
+                reminder_text = "Hold control key and click on point cloud to start drawing bounding box";
+            } else {
+                if (isResizing) {
+                    reminder_text = "Release mouse to stop resizing box";
+                } else if (isMoving) {
+                    reminder_text = "Release mouse to stop translating box";
+                } else if (isRotating) {
+                    reminder_text = "Release mouse to stop rotating box";
+                } else if (mouseDown) {
+                    reminder_text = "Release mouse to stop drawing box";
+                } else {
+                    reminder_text = "Click on point cloud to start drawing bounding box"
+                }
+            }
+        }
+    } else {
+        reminder_text = "Resume recording to continue annotating";
+    }
+    
+    $("#draw_bounding_box_reminder").find("p").text(reminder_text);
+    // console.log(reminder_text);
+
+    
     var x = pos.z;
     var y = pos.x;
 
