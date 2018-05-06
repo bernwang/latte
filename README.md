@@ -1,5 +1,9 @@
 # LiDAR-annotator
+<<<<<<< HEAD
 Lidar annotation tool using ray tracing and bounding boxes.
+=======
+LiDAR annotation tool using ray tracing and bounding boxes.
+>>>>>>> d5ba815b28ad4a51efecaa4d604d81489822f71b
 
 # For people using the annotator for the efficiency test
 1. There are 10 frames (.bin files) in /test/velodyne_points/data. 
@@ -20,8 +24,13 @@ Lidar annotation tool using ray tracing and bounding boxes.
 # Usage
 1. Clone the repository
 2. To launch the app, just open index.html on your browser.
+<<<<<<< HEAD
 3. Load lidar data (see lidar format). 
 4. To draw a bounding box, simply hold the "control" key down and click and drag. See "Controls" section to learn more about user interface. 
+=======
+3. Load LiDAR data (see LiDAR format). 
+4. To draw a bounding box, simply hold your mouse down and drag across the screen. See "Controls" section to learn more about user interface. 
+>>>>>>> d5ba815b28ad4a51efecaa4d604d81489822f71b
 5. To *export* your bounding boxes, click on the "save" button to the top-left.
 
 # Controls
@@ -45,7 +54,7 @@ Lidar annotation tool using ray tracing and bounding boxes.
 2. To change label, just change the value in the dropdown input, and the bounding box's object id will save automatically on input change
 3. You can also delete a bounding box by selecting its corresponding row, and the bounding box should turn blue. Then press the delete or backspace key to delete the bounding box. Its corresponding table row should also be deleted. 
 
-# Lidar Format
-This version of the app assumes the lidar data to be stored in a binary float matrix (.bin extension). 
+# LiDAR Format
+This version of the app assumes the LiDAR data to be stored in a binary float matrix (.bin extension). 
 Each column is a point, where the rows are in the following order: x, y, z, and intensity (little endian).
 See the 3D Velodyne point clouds in [KITTI's dataset](http://www.cvlibs.net/datasets/kitti/raw_data.php) for example. 
