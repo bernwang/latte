@@ -1,9 +1,5 @@
 # LiDAR-annotator
-<<<<<<< HEAD
-Lidar annotation tool using ray tracing and bounding boxes.
-=======
 LiDAR annotation tool using ray tracing and bounding boxes.
->>>>>>> d5ba815b28ad4a51efecaa4d604d81489822f71b
 
 # For people using the annotator for the efficiency test
 1. There are 10 frames (.bin files) in /test/velodyne_points/data. 
@@ -19,19 +15,15 @@ LiDAR annotation tool using ray tracing and bounding boxes.
 1. Go into "draw" mode. Draw bounding boxes for all objects of interest (i.e. vehicles, pedestrians, cyclists). 
 ![Alt Text](https://github.com/bernwang/LiDAR-annotator/blob/evaluation/gifs/step1.gif)
 2. Then, in "3D mode", for each row in the Object ID table, click on the object number, and its corresponding bounding box will turn blue. Then adjust the object id (car, van, truck, etc.) to what you think that object is. If the object is not an object of interest, just hit the delete or backspace key to delete the bounding box. 
+![Alt Text](https://github.com/bernwang/LiDAR-annotator/blob/evaluation/gifs/step2.gif)
 3. If you miss any object of interest, go back to "draw" mode to draw a bounding box for it.
 4. Repeat (1) through (3) until you think that all objects of interest are covered.
 
 # Usage
 1. Clone the repository
 2. To launch the app, just open index.html on your browser.
-<<<<<<< HEAD
-3. Load lidar data (see lidar format). 
-4. To draw a bounding box, simply hold the "control" key down and click and drag. See "Controls" section to learn more about user interface. 
-=======
 3. Load LiDAR data (see LiDAR format). 
 4. To draw a bounding box, simply hold your mouse down and drag across the screen. See "Controls" section to learn more about user interface. 
->>>>>>> d5ba815b28ad4a51efecaa4d604d81489822f71b
 5. To *export* your bounding boxes, click on the "save" button to the top-left.
 
 # Controls
