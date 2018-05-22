@@ -206,16 +206,22 @@ function onKeyDown(event) {
    var KeyID = event.keyCode;
    switch(KeyID)
    {
-      case 8: // backspace
-      deleteSelectedBox();
-      break; 
-      case 46: // delete
-      deleteSelectedBox();
-      break;
-      case 68:
-      // toggleControl(false);
-      default:
-      break;
+        case 29: // linux l ctrl
+        toggleControl(false);
+        break;
+        case 97: // linux r ctrl
+        toggleControl(false);
+        break;
+        case 8: // backspace
+        deleteSelectedBox();
+        break; 
+        case 46: // delete
+        deleteSelectedBox();
+        break;
+        case 68:
+        // toggleControl(false);
+        default:
+        break;
    }
 }
 
