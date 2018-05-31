@@ -1,4 +1,5 @@
-
+// TODO: Fix bug where there is a phantom box in the next frame when you delete a box
+//
 
 if ( ! Detector.webgl ) Detector.addGetWebGLMessage();
 

@@ -15,7 +15,7 @@ function addRow(box) {
     $("#object-table tbody select").last().focus();
 }
 
-// handler that highlights input and corresponding bounding box when input ic selected
+// handler that highlights input and corresponding bounding box when input is selected
 $("#object-table").on('mousedown', 'tbody tr', function() {
     isMoving = false;
     var boxId = $(this).find('.id').text();
@@ -24,12 +24,17 @@ $("#object-table").on('mousedown', 'tbody tr', function() {
     box.select(null);
     selectedBox = box;
     var center = box.get_center();
-    // console.log(center);
-    // camera.position.set(center.x, 100, center.y);
-    // camera.updateProjectionMatrix();
-    // controls.update();
+    var current_angle = camera.rotation.z;
+    console.log("current angle:", current_angle);
+    controls.target.set(center.x, 0, center.y);
     
-    // console.log(camera.position);
+    // controls.target.set(0, 0, 0);
+    camera.updateProjectionMatrix();
+    controls.update();
+    
+    controls.update();
+    camera.rotation.z = current_angle;
+    console.log("camera rotation: ", camera.rotation.z);
     // camera.lookAt(new THREE.Vector3(center.x,0,center.y));
     
     // controls.update();
