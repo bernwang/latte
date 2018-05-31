@@ -178,6 +178,8 @@ function init() {
 function onKeyDown(event) {
     if (event.ctrlKey) {
         toggleControl(false);
+    } else if (window.navigator.platform.includes("Linux") && (KeyID == 29 || KeyID == 97)) {
+        toggleControl(false);
     }
    var KeyID = event.keyCode;
    switch(KeyID)
