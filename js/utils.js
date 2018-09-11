@@ -155,7 +155,7 @@ function getIntersection(b) {
     var closestCorner = null;
     for (var i = 0; i < b.geometry.vertices.length; i++) {
         if (distance2D(pos, b.geometry.vertices[i]) < shortestDistance &&
-            distance2D(pos, b.geometry.vertices[i]) < distanceThreshold) {
+            distance2D(pos, b.geometry.vertices[i]) < b.get_cursor_distance_threshold()) {
             shortestDistance = distance2D(pos, b.geometry.vertices[i]);
             closestCorner = b.geometry.vertices[i];
         }
@@ -182,7 +182,7 @@ function closestPoint(p, vertices) {
     return closestIdx;
 }
 
-function save() {
+function save(boundingBoxes) {
   var outputBoxes = []
   for (var i = 0; i < boundingBoxes.length; i++) {
     outputBoxes.push(new OutputBox(boundingBoxes[i]));
@@ -205,8 +205,25 @@ function upload_file() {
         reset();
         var file = x.files[0];
         load_text_file(file, import_annotations_from_bin);
+        evaluator.resume_3D_time();
+        evaluator.resume_time();
+        $("#record").show();
+        isRecording = true;
     }
 }
+
+function upload_files() {
+    var x = document.getElementById("file_input");
+    if (x.files.length > 0) {
+        for (var i = 0; i < x.files.length; i++) {
+            var file = x.files[i];
+            var filename = x.files[i].name;
+            evaluation.add_filename(filename);
+            load_text_file(file, import_annotations_from_bin);
+        }
+    }
+}
+
 
 function import_annotations_from_bin(data) {
   if ( data === '' || typeof(data) === 'undefined') {
@@ -227,9 +244,20 @@ function load_text_file(text_file, callback_function) {
 function readData(e) {
     var rawLog = this.result;
     var floatarr = new Float32Array(rawLog)
-    data = floatarr;
-    show();
-    animate();
+    evaluation.add_data(floatarr);
+    if (evaluation.num_frames() == evaluation.filenames.length) {
+        reset();
+        data = evaluation.get_data();
+        show();
+        animate();
+
+        // evaluator.resume_3D_time();
+        // evaluator.resume_time();
+        $("#record").show();
+        isRecording = false;
+        $("#file_input").hide();
+        select2DMode();
+    }
 }
 
 

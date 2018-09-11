@@ -1,5 +1,5 @@
 * {
-    font-family: 'Open Sans';
+    font-family: 'Arial';
 }
 body {
   color: #ffffff;
@@ -76,41 +76,29 @@ nav a:hover {
 nav li + li {
     border-top:1px solid #444;
 }
-
-/*.inputfile {
-  width: 0.1px;
-  height: 0.1px;
-  opacity: 0;
-  overflow: hidden;
-  position: absolute;
-  z-index: -1;
+#draw_bounding_box_reminder {
+  font-size: 12px;
+  position: fixed;
+    left: 10px;
+    bottom: 0;
+    width: 200px;
+    text-align: left;
 }
 
-.inputfile + label {
-    font-size: 1.25em;
-    font-weight: 700;
-    color: white;
-    background-color: black;
-    display: inline-block;
+
+#footer {
+  font-size: 12px;
+  position: fixed;
+    right: 10px;
+    bottom: 0;
+    width: 120px;
+    text-align: left;
 }
 
-.inputfile:focus + label,
-.inputfile + label:hover {
-    background-color: red;
-}*/
+#footer p {
+  size: 50%;
+}
 
-/*.upload {
-  display: inline-flex;
-  align-items: center;
+.id:hover {
+  color: blue;
 }
-i.fa-upload {
-  margin: 10px;
-  cursor: pointer;
-  font-size: 30px;
-}
-i:hover {
-  opacity: 0.6;
-}
-input {
-  display: none;
-}*/

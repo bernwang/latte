@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 	<head>
-		<title>Lidar Annotator</title>
+		<title>LiDAR Annotator</title>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 		<link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.6.0/css/font-awesome.min.css" rel="stylesheet">
@@ -12,15 +12,19 @@
 	<body>
 		<nav class="tools">
 			<ul id="tools">
+				<!-- Commented out file input and export for evaluation -->
 				<li>
-					  <input type="file" id="file_input" class="inputfile">
+					  <input type="file" id="file_input" class="inputfile" multiple>
 				</li>
 				
 
-				<li><a href="#" id="save"><i class="fa fa-floppy-o"></i></a></li>
+				<!-- <li><a href="#" id="save"><i class="fa fa-floppy-o"></i></a></li> -->
+				<li><a href="#" id="next_frame"><i class="fas fa-caret-square-right">Next Frame</i></a></li>
 				<li><a href="#" class="selected" id="move"><i class="fa material-icons">3d_rotation</i></a></li>
-				<li><a href="#" id="move2D"><i class="fa fa-arrows"></i></a></li>
+				<li><a href="#" id="move2D"><i class="fa fa-pencil"></i></a></li>
 				<!-- <li><a href="#" id="ids"><i class="fa fa-pencil"></i></a></li> -->
+				<li>
+					<button type='button' id='record' style="display: none;">Click to start recording</button>
 				<li>
 					<div>
 						<table id="object-table">
@@ -46,42 +50,28 @@
 
 		<div id="container"></div>
 
+		<div id="info">LiDAR Annotator</div>
+		<div id="draw_bounding_box_reminder"><p></p></div>
+		<div id="footer"><p></p></div>
 
 
-		<div id="info">Lidar Annotator</div>
-
-    <script src="js/three.min.js"></script>
-    <script src="js/OrbitControls.js"></script>
-	<script src="js/Detector.js"></script>
+    <script src="js/libs/three.min.js"></script>
+    <script src="js/libs/OrbitControls.js"></script>
+	<script src="js/libs/Detector.js"></script>
 	<script src="js/libs/stats.min.js"></script>
-	<script src="js/FileSaver.min.js"></script>
-	<script src="js/dat.gui.min.js"></script>
+	<script src="js/libs/FileSaver.min.js"></script>
+	<script src="js/libs/dat.gui.min.js"></script>
 	<script src="js/box.js"></script>
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-
-	<script type="x-shader/x-vertex" id="vertexshader">
-		<!-- attribute float size;
-		attribute vec3 customColor;
-		varying vec3 vColor;
-		void main() {
-			vColor = customColor;
-			vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
-			gl_PointSize = size * ( 300.0 / -mvPosition.z );
-			gl_Position = projectionMatrix * mvPosition;
-		}
-	</script>
-
-	<script type="x-shader/x-fragment" id="fragmentshader">
-		uniform vec3 color;
-		uniform sampler2D texture;
-		varying vec3 vColor;
-		void main() {
-			gl_FragColor = vec4( color * vColor, 1.0 );
-			gl_FragColor = gl_FragColor * texture2D( texture, gl_PointCoord );
-			if ( gl_FragColor.a < ALPHATEST ) discard;
-		}
-	</script>
 	<script src="js/utils.js"></script>
+
+	<script src="js/ObjectTable.js"></script>
+	<script src="js/Box.js?nocache"></script>
+	<script src="js/Evaluation.js?nocache"></script>
+	<script src="js/Evaluator.js?nocache"></script>
 	<script src="js/main.js?nocache"></script>
+
+
+
 	</body>
 </html>
