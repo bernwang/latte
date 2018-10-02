@@ -1,0 +1,41 @@
+missile (score = 0.27732)
+your frame can not show on the picture
+your frame can not show on the picture
+your frame can not show on the picture
+your frame can not show on the picture
+your frame can not show on the picture
+your frame can not show on the picture
+traffic light, traffic signal, stoplight (score = 0.79772)
+traffic light, traffic signal, stoplight (score = 0.79772)
+traffic light, traffic signal, stoplight (score = 0.79772)
+traffic light, traffic signal, stoplight (score = 0.79772)
+traffic light, traffic signal, stoplight (score = 0.79772)
+traffic light, traffic signal, stoplight (score = 0.79772)
+your frame can not show on the picture
+traffic light, traffic signal, stoplight (score = 0.79772)
+traffic light, traffic signal, stoplight (score = 0.79772)
+traffic light, traffic signal, stoplight (score = 0.79772)
+traffic light, traffic signal, stoplight (score = 0.79772)
+traffic light, traffic signal, stoplight (score = 0.79772)
+traffic light, traffic signal, stoplight (score = 0.79772)
+your frame can not show on the picture
+traffic light, traffic signal, stoplight (score = 0.79772)
+traffic light, traffic signal, stoplight (score = 0.79772)
+traffic light, traffic signal, stoplight (score = 0.79772)
+traffic light, traffic signal, stoplight (score = 0.79772)
+traffic light, traffic signal, stoplight (score = 0.79772)
+traffic light, traffic signal, stoplight (score = 0.79772)
+your frame can not show on the picture
+minivan (score = 0.08421)
+trolleybus, trolley coach, trackless trolley (score = 0.11206)
+traffic light, traffic signal, stoplight (score = 0.84403)
+flagpole, flagstaff (score = 0.45229)
+flagpole, flagstaff (score = 0.29581)
+missile (score = 0.27732)
+your frame can not show on the picture
+your frame can not show on the picture
+hihihihihihiyour frame can not show on the picture
+your frame can not show on the picture
+your frame can not show on the picture
+your frame can not show on the picture
+your frame can not show on the picture
