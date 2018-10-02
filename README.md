@@ -1,9 +1,5 @@
 # LiDAR-annotator
-<<<<<<< HEAD
-Lidar annotation tool using ray tracing and bounding boxes.
-=======
 LiDAR annotation tool using ray tracing and bounding boxes.
->>>>>>> d5ba815b28ad4a51efecaa4d604d81489822f71b
 
 # For people using the annotator for the efficiency test
 1. There are 10 frames (.bin files) in /test/velodyne_points/data. 
@@ -25,13 +21,8 @@ LiDAR annotation tool using ray tracing and bounding boxes.
 # Usage
 1. Clone the repository
 2. To launch the app, just open index.html on your browser.
-<<<<<<< HEAD
-3. Load lidar data (see lidar format). 
-4. To draw a bounding box, simply hold the "control" key down and click and drag. See "Controls" section to learn more about user interface. 
-=======
 3. Load LiDAR data (see LiDAR format). 
 4. To draw a bounding box, simply hold your mouse down and drag across the screen. See "Controls" section to learn more about user interface. 
->>>>>>> d5ba815b28ad4a51efecaa4d604d81489822f71b
 5. To *export* your bounding boxes, click on the "save" button to the top-left.
 
 # Controls
