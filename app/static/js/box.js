@@ -315,6 +315,7 @@ function OutputBox(box) {
     var v3 = box.geometry.vertices[2];
     var center = getCenter(v1, v2);
     this.center = new THREE.Vector2(center.z, center.x);
+    console.log("center: ", this.center);
     this.width = distance2D(v2, v3);
     this.length = distance2D(v1, v3);
     this.angle = box.angle;

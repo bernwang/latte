@@ -43,7 +43,7 @@ function normalizeColors(vertices, color) {
         // colors[i] = ( color.clone().multiplyScalar( intensity * 2 ) );
         normalizedIntensities.push(intensities[i]);
         colors[i] = ( new THREE.Color( intensity, 0, 1 - intensity).multiplyScalar(intensity * 5));
-
+        // colors[i] = color.clone();
         // if (colors[i].b > colors[i].r) {
         //     colors[i] = colors[i].multiplyScalar(0);
         // }
@@ -51,10 +51,25 @@ function normalizeColors(vertices, color) {
     return colors;
 }
 
+function highlightPoints(indices) {
+    // var colors = []
+    // for (var i = 0; i < pointcloud.geometry.colors.length; i++) {
+    //     colors.push(pointcloud.geometry.colors[i].clone());
+    // }
+    for (var j = 0; j < indices.length; j++) {
+        pointcloud.geometry.colors[indices[j]] = new THREE.Color( 0,1,0 );
+    }
+    // pointcloud.geometry.colors = colors;
+    console.log(indices.length);
+    // console.log(colors);
+    pointcloud.geometry.colorsNeedUpdate = true;
+
+}
+
 function generatePointCloud( vertices, color ) {
 
     var geometry = new THREE.Geometry();
-
+    var colors = [];
     var k = 0;
     var stride = 4;
     for ( var i = 0, l = vertices.length / 4; i < l; i ++ ) {
@@ -67,11 +82,12 @@ function generatePointCloud( vertices, color ) {
         
         // add vertex to geometry
         geometry.vertices.push( v );
-
+        colors.push(color.clone());
         k++;
     }
     console.log("size: ", geometry.vertices.length);
     geometry.colors = normalizeColors(vertices, color);
+    // geometry.colors = colors;
     geometry.computeBoundingBox();
 
     var material = new THREE.PointsMaterial( { size: pointSize, sizeAttenuation: false, vertexColors: THREE.VertexColors } );

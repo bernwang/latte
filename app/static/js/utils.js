@@ -212,15 +212,24 @@ function upload_file() {
     }
 }
 
+var fileLoaded = true;
+var currFile = "";
 function upload_files() {
     var x = document.getElementById("file_input");
     if (x.files.length > 0) {
         for (var i = 0; i < x.files.length; i++) {
-            var file = x.files[i];
             var filename = x.files[i].name;
+            var file = x.files[i];
             evaluation.add_filename(filename);
-            load_text_file(file, import_annotations_from_bin);
         }
+        var text_reader = new FileReader();
+        load_data_helper(0, x.files);
+    }
+}
+
+function load_data_helper(index, files) {
+    if (index < evaluation.filenames.length) {
+        load_text_file(index, files[index], files);
     }
 }
 
@@ -232,22 +241,25 @@ function import_annotations_from_bin(data) {
 }
 
 
-function load_text_file(text_file, callback_function) {
+function load_text_file(index, text_file, files) {
   if (text_file) {
     var text_reader = new FileReader();
     text_reader.readAsArrayBuffer(text_file);
-    text_reader.onload = readData;
-    image_loaded = true;
+    text_reader.onload = function() {
+        readData(text_reader);
+        load_data_helper(index + 1, files);
+    }
   }
 }
 
-function readData(e) {
-    var rawLog = this.result;
+function readData(text_reader) {
+    var rawLog = text_reader.result;
     var floatarr = new Float32Array(rawLog)
     evaluation.add_data(floatarr);
-    if (evaluation.num_frames() == evaluation.filenames.length) {
+    if (evaluation.num_frames() == 1) { 
         reset();
         data = evaluation.get_data();
+        // getMaskRCNNLabels(evaluation.get_filename());
         show();
         animate();
         // $.ajax({

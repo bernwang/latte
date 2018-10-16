@@ -102,7 +102,7 @@ function init() {
 function write_frame() {
     evaluator.pause_recording();
     evaluation.add_evaluator(evaluator);
-    evaluation.write_frame();
+    // evaluation.write_frame();
 }
 
 function predictLabel(boundingBox) {
@@ -128,34 +128,56 @@ function predictLabel(boundingBox) {
     }
 }
 
-function next_frame(event) {
-    if (evaluation.is_done()) {
-        alert("You have completed the evaluation! Thank you for participating!");
-        write_frame();
-        evaluation.write_output();
-        return;
-    } 
-    var response = confirm('Do you want to move on to the next frame? You cannot go back to edit previous frames.');
-
-    if (response == true) {
-        $("#next_frame").text("Next Frame (" + (evaluation.get_frame_number() + 1) + 
-                                "/" + evaluation.num_frames() + ")");
-        write_frame();
-        evaluation.next_frame();
-        $.ajax({
-            url: '/updateBoundingBoxes',
-            data: JSON.stringify({bounding_boxes: stringifyBoundingBoxes(boundingBoxes)}),
+function getMaskRCNNLabels(filename) {
+    $.ajax({
+            url: '/getMaskRCNNLabels',
+            data: JSON.stringify({filename: filename}),
             type: 'POST',
             contentType: 'application/json;charset=UTF-8',
             success: function(response) {
-                console.log(response);
+                var l = response.length - 1;
+                maskRCNNIndices = response.substring(1, l).split(',').map(Number);
+                // console.log(maskRCNNIndices);
+                // console.log(response);
+                highlightPoints(maskRCNNIndices);
             },
             error: function(error) {
                 console.log(error);
             }
         });
+}
+
+function next_frame(event) {
+    if (evaluation.is_done()) {
+        alert("You have completed the evaluation! Thank you for participating!");
+        write_frame();
+        console.log(evaluation.evaluators);
+        evaluation.write_output();
+        return;
+    } 
+    var response = confirm('Do you want to move on to the next frame? You cannot go back to edit previous frames.');
+    console.log("length: ", data.length);
+    console.log(data.slice(0, 10));
+    if (response == true) {
+        $("#next_frame").text("Next Frame (" + (evaluation.get_frame_number() + 1) + 
+                                "/" + evaluation.num_frames() + ")");
+        write_frame();
+        evaluation.next_frame();
+        // $.ajax({
+        //     url: '/updateBoundingBoxes',
+        //     data: JSON.stringify({bounding_boxes: stringifyBoundingBoxes(boundingBoxes)}),
+        //     type: 'POST',
+        //     contentType: 'application/json;charset=UTF-8',
+        //     success: function(response) {
+        //         console.log(response);
+        //     },
+        //     error: function(error) {
+        //         console.log(error);
+        //     }
+        // });
         reset();
         data = evaluation.get_data();
+        // getMaskRCNNLabels(evaluation.get_filename());
         show();
         console.log(normalizedIntensities.length, pointcloud.geometry.vertices.length);  
         $.ajax({
