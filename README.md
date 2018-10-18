@@ -1,6 +1,7 @@
 # LiDAR-annotator
 LiDAR annotation tool using ray tracing and bounding boxes.
 
+![Alt Text] (https://www.youtube.com/watch?v=Il5a1egqnUI&feature=youtu.be)
 # For people using the annotator for the efficiency test
 1. There are 10 frames (.bin files) in /test/velodyne_points/data. 
 2. You can load multiple frames at once. Frames take between 2-8 minutes to annonate based now how many objects are in the scene. You should load a few frames at a time (~3-5), and doing them in batches, in the case of lost data. Data is exported only after all selected frames are annotated. Please note that if the page is refreshed or if the window is closed, all progress is lost. 
