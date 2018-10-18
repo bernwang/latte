@@ -1,7 +1,7 @@
 # LiDAR-annotator
 LiDAR annotation tool using ray tracing and bounding boxes.
 
-[Demo Video: ](https://www.youtube.com/watch?v=Il5a1egqnUI&feature=youtu.be)
+Demo Video: [https://www.youtube.com/watch?v=Il5a1egqnUI&feature=youtu.be](https://www.youtube.com/watch?v=Il5a1egqnUI&feature=youtu.be)
 
 # For people using the annotator for the efficiency test
 1. There are 10 frames (.bin files) in /test/velodyne_points/data. 
