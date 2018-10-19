@@ -1,6 +1,6 @@
 # LiDAR-annotator
+## Bernie Wang, Virginia Wu, Bichen Wu, Kurt Keutzer
 LiDAR annotation tool using ray tracing and bounding boxes.
-Bernie Wang, Virginia Wu, Bichen Wu, Kurt Keutzer
 Demo Video: [https://www.youtube.com/watch?v=Il5a1egqnUI](https://www.youtube.com/watch?v=Il5a1egqnUI&feature=youtu.be)
 
 # For people using the annotator for the efficiency test
