@@ -1,5 +1,8 @@
-# LiDAR-annotator
+# LiDAR Annotator
+## Bernie Wang, Virginia Wu, Bichen Wu, Kurt Keutzer
 LiDAR annotation tool using ray tracing and bounding boxes.
+![Alt Text](https://github.com/bernwang/LiDAR-annotator/blob/evaluation/gifs/step1.gif)
+Demo Video: [https://www.youtube.com/watch?v=QWjWpqvYA_c](https://www.youtube.com/watch?v=QWjWpqvYA_c&feature=youtu.be)
 
 # For people using the annotator for the efficiency test
 1. There are 10 frames (.bin files) in /test/velodyne_points/data. 
@@ -13,7 +16,6 @@ LiDAR annotation tool using ray tracing and bounding boxes.
 
 # My strategy for annotating
 1. Go into "draw" mode. Draw bounding boxes for all objects of interest (i.e. vehicles, pedestrians, cyclists). 
-![Alt Text](https://github.com/bernwang/LiDAR-annotator/blob/evaluation/gifs/step1.gif)
 2. Then, in "3D mode", for each row in the Object ID table, click on the object number, and its corresponding bounding box will turn blue. Then adjust the object id (car, van, truck, etc.) to what you think that object is. If the object is not an object of interest, just hit the delete or backspace key to delete the bounding box. 
 3. If you miss any object of interest, go back to "draw" mode to draw a bounding box for it.
 4. Repeat (1) through (3) until you think that all objects of interest are covered.
