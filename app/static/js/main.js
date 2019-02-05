@@ -528,7 +528,7 @@ function onDocumentMouseDown( event ) {
                 newBoxHelper = new THREE.Box3Helper( newBoundingBox, 0xffff00 );
                 anchor = anchor.clone();
 
-                newBox = new Box(anchor, v, angle, newBoundingBox, newBoxHelper);
+                newBox = new Box(anchor, v, angle, newBoundingBox, newBoxHelper, data);
             }
         }
     }
@@ -537,7 +537,7 @@ function onDocumentMouseDown( event ) {
 function createBox(anchor, v, angle) {
     newBoundingBox = new THREE.Box3(v, anchor);
     newBoxHelper = new THREE.Box3Helper( newBoundingBox, 0xffff00 );
-    newBox = new Box(anchor, v, angle, newBoundingBox, newBoxHelper);
+    newBox = new Box(anchor, v, angle, newBoundingBox, newBoxHelper, data);
     newBox.resize(v);
     scene.add(newBox.points);
     scene.add( newBox.boxHelper );
@@ -769,5 +769,3 @@ function clearTable() {
         }
     id = 0;
 }
-
-

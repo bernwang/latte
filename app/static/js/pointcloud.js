@@ -49,18 +49,6 @@ function normalizeColors(vertices, color) {
     return colors;
 }
 
-function getHeight(vertices, box) {
-    zs = [];
-    var stride = 4;
-    for ( var i = 0, l = vertices.length / 4; i < l; i ++ ) {
-        zs.push(vertices[ stride * i + 2]);
-    }
-
-    min = getMinElement(zs);
-    max = getMaxElement(zs);
-    return [max-min, (max+min)/2];
-}
-
 
 function highlightPoints(indices) {
     // var colors = []

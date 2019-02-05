@@ -1,4 +1,4 @@
-function Box(anchor, cursor, angle, boundingBox, boxHelper) {
+function Box(anchor, cursor, angle, boundingBox, boxHelper, data) {
     this.id = id; // id (int) of Box
     this.object_id = 'car'; // object id (string)
     this.color = hover_color.clone(); // color of corner points
@@ -29,6 +29,11 @@ function Box(anchor, cursor, angle, boundingBox, boxHelper) {
     this.geometry.vertices.push(anchor.clone());
     this.geometry.vertices.push(cursor.clone());
     this.geometry.vertices.push(getCenter(anchor.clone(), cursor.clone()));
+
+    // height and centerZ
+    [heightCar, centerZ] = getHeight(data,this.boundingBox);
+    this.heightCar = heightCar;
+    this.centerZ = centerZ;
 
     this.hasPredictedLabel = false;
 
@@ -62,6 +67,10 @@ function Box(anchor, cursor, angle, boundingBox, boxHelper) {
             var bottomRight = getBottomRight(v1, v2);
             var topCenter = getCenter(topLeft, maxVector);
             var bottomCenter = getCenter(minVector, bottomRight);
+            
+            [heightCar, centerZ] = getHeight(data,this.boundingBox);
+            this.heightCar = heightCar;
+            this.centerZ = centerZ;
 
             // need to do this to make matrix invertible
             maxVector.y = 0.00001; 
@@ -106,6 +115,10 @@ function Box(anchor, cursor, angle, boundingBox, boxHelper) {
         // get relative angle of cursor with respect to 
         var center = getCenter(maxVector, minVector);
         var angle = getAngle(center, bottomCenter, cursor, topCenter);
+        
+        [heightCar, centerZ] = getHeight(data,this.boundingBox);
+        this.heightCar = heightCar;
+        this.centerZ = centerZ;
 
         // update angle of Box and bounding box
         this.angle = this.angle + angle;
@@ -155,7 +168,11 @@ function Box(anchor, cursor, angle, boundingBox, boxHelper) {
         rotate(maxVector, minVector, this.angle);
         rotate(topLeft, bottomRight, this.angle);
         rotate(topCenter, bottomCenter, this.angle);
-
+        
+        
+        [heightCar, centerZ] = getHeight(data,this.boundingBox);
+        this.heightCar = heightCar;
+        this.centerZ = centerZ;
         // need to do this to make matrix invertible
         maxVector.y += 0.0000001; 
 
@@ -289,7 +306,38 @@ function highlightCorners() {
 }
 
 
+// get height and z-center
+function getHeight(data, boundingBox) {
+    var zs = [];
+    var xs = [];
+    var ys = [];
+    var stride = 4;
+    var x_point = 0;
+    var y_point = 0;
+    var l = data.length/4;
+    for ( var i = 0; i < l; i ++ ) {
+        x_point = data[ stride * i ];
+        y_point = data[ stride * i + 1];
+        if (boundingBox.distanceToPoint(
+            new THREE.Vector3(y_point,0.000001, x_point)) == 0 ) {
+            zs.push(data[ stride * i + 2]);
+            xs.push(data[ stride * i]);
+            ys.push(data[ stride * i + 1]);
+        }
+    }
+    // for debuging
+    // console.log(boundingBox);
+    // console.log(zs);
+    // console.log(getMaxElement(xs));
+    // console.log(getMinElement(xs));
+    // console.log(getMaxElement(ys));
+    // console.log(getMinElement(ys));
 
+    min = getMinElement(zs);
+    max = getMaxElement(zs);
+    var heightCar = max-min;
+    return [max-min, (max+min)/2];
+}
 
 // method to add box to boundingBoxes and object id table
 function addBox(box) {
@@ -308,16 +356,16 @@ function stringifyBoundingBoxes(boundingBoxes) {
 }
 
 
-
 function OutputBox(box) {
     var v1 = box.geometry.vertices[0];
     var v2 = box.geometry.vertices[1];
     var v3 = box.geometry.vertices[2];
     var center = getCenter(v1, v2);
-    this.center = new THREE.Vector2(center.z, center.x);
+    this.center = new THREE.Vector3(center.z, center.x, box.centerZ);
     console.log("center: ", this.center);
     this.width = distance2D(v2, v3);
     this.length = distance2D(v1, v3);
+    this.height = box.heightCar;
     this.angle = box.angle;
     this.object_id = box.object_id;
 }
