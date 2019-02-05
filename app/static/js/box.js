@@ -362,7 +362,7 @@ function OutputBox(box) {
     var v3 = box.geometry.vertices[2];
     var center = getCenter(v1, v2);
     this.center = new THREE.Vector3(center.z, center.x, box.centerZ);
-    console.log("center: ", this.center);
+    // console.log("center: ", this.center);
     this.width = distance2D(v2, v3);
     this.length = distance2D(v1, v3);
     this.height = box.heightCar;

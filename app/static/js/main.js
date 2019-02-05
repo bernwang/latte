@@ -63,7 +63,7 @@ function init() {
 
     //
     grid = new THREE.GridHelper( 200, 20, 0xffffff, 0xffffff );
-    scene.add( grid );
+    // scene.add( grid );
 
     // set up renderer
     renderer = new THREE.WebGLRenderer({preserveDrawingBuffer: true});
@@ -291,6 +291,8 @@ function toggleControl(b) {
         controls.enabled = b;
         controls.update();
     } else {
+        // controls.enabled = b;
+        // controls.update();
         if (move2D) {
             controls.enabled = b;
             controls.update();
@@ -505,6 +507,7 @@ function onDocumentMouseDown( event ) {
                 var box = intersection[0];
                 var closestIdx = closestPoint(anchor, box.geometry.vertices);
                 // console.log("closest: ", closestIdx);
+                // 4th node is for rotation
                 if (closestIdx == 4) {
                     isRotating = true;
                     rotatingBox = box;
@@ -639,17 +642,21 @@ function moveMode( event ) {
     assertRecordMode();
     if (isRecording) {
         controls.enabled = true;
-        move2D = false;
         // document.getElementById( 'label' ).className = "";
         document.getElementById( 'move2D' ).className = "";
         document.getElementById( 'move' ).className = "selected";
         controls.maxPolarAngle = 2 * Math.PI;
         controls.minPolarAngle = -2 * Math.PI;
         unprojectFromXZ();
-
-
-
         evaluator.resume_3D_time();
+
+        for (var i = 0; i < boundingBoxes.length; i++) {
+            var box = boundingBoxes[i];
+            box.boundingBox.max.y = box.centerZ + box.heightCar/2;
+            box.boundingBox.min.y = box.centerZ - box.heightCar/2;
+            // console.log(box);
+        }
+        move2D = false;
     }
 }
 
@@ -692,6 +699,12 @@ function move2DMode( event ) {
 
 
             evaluator.pause_3D_time();
+            // for (var i = 0; i < boundingBoxes.length; i++) {
+            //     var box = boundingBoxes[i];
+            //     box.boundingBox.max.y = 0.00001;
+            //     box.boundingBox.min.y = 0;
+            //     // console.log(box);
+            // }
         }
         controls.enabled = true;
         controls.update();
