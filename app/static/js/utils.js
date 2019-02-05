@@ -183,7 +183,8 @@ function closestPoint(p, vertices) {
 }
 
 function save(boundingBoxes) {
-  var outputBoxes = []
+  alert("Saving to test.json");
+  var outputBoxes = [];
   for (var i = 0; i < boundingBoxes.length; i++) {
     outputBoxes.push(new OutputBox(boundingBoxes[i]));
   }

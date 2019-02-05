@@ -5,20 +5,18 @@ function normalizeColors(vertices, color) {
     normalizedIntensities = [];
     colors = [];
 
-    k = 0;
     var stride = 4;
     console.log("vertices length: ", vertices.length);
     // finds max and min z coordinates
     for ( var i = 0, l = vertices.length / 4; i < l; i ++ ) {
         
-        if (vertices[ stride * k + 2] > maxColor) {
-            maxColor = vertices[ stride * k + 2];
+        if (vertices[ stride * i + 2] > maxColor) {
+            maxColor = vertices[ stride * i + 2];
         }
-        if (vertices[ stride * k + 2] < minColor) {
-            minColor = vertices[ stride * k + 2];
+        if (vertices[ stride * i + 2] < minColor) {
+            minColor = vertices[ stride * i + 2];
         }
-        intensities.push(vertices[ stride * k + 2]);
-        k++;
+        intensities.push(vertices[ stride * i + 2]);
     }
 
     mean = calculateMean(intensities);
@@ -50,6 +48,19 @@ function normalizeColors(vertices, color) {
     }
     return colors;
 }
+
+function getHeight(vertices, box) {
+    zs = [];
+    var stride = 4;
+    for ( var i = 0, l = vertices.length / 4; i < l; i ++ ) {
+        zs.push(vertices[ stride * i + 2]);
+    }
+
+    min = getMinElement(zs);
+    max = getMaxElement(zs);
+    return [max-min, (max+min)/2];
+}
+
 
 function highlightPoints(indices) {
     // var colors = []

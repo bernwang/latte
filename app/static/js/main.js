@@ -90,7 +90,7 @@ function init() {
     document.getElementById('container').addEventListener( 'mousedown', onDocumentMouseDown, false );
     document.getElementById('container').addEventListener( 'mouseup', onDocumentMouseUp, false );
     document.addEventListener( 'mousemove', updateMouse, false );
-    // document.getElementById( 'save' ).addEventListener( 'click', save, false );
+    document.getElementById( 'save' ).addEventListener( 'click', save, false );
     document.getElementById( 'next_frame' ).addEventListener( 'click', next_frame, false );
     document.getElementById( 'move' ).addEventListener( 'click', moveMode, false );
     document.getElementById( 'move2D' ).addEventListener( 'click', move2DMode, false );
