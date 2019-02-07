@@ -23,15 +23,18 @@ var currentPosition = new THREE.Vector3();
 var boxgeometry = new THREE.BoxGeometry( 1, 1, 1 );
 var boxmaterial = new THREE.MeshDepthMaterial( {opacity: .1} );
 var move2D = false;
+var mode3D = false;
 var selectedBox;
 var angle;
 var hoverIdx, hoverBox;
-var resizeBox, rotatingBox;
+var resizeBox, rotatingBox, reheightBox;
+var dispPlane;
 var isResizing = false;
 var isMoving = false;
 var isRotating = false;
+var isReHeighting = false;
 var grid;
-var pointMaterial = new THREE.PointsMaterial( { size: pointSize * 4, sizeAttenuation: false, vertexColors: THREE.VertexColors } );
+var pointMaterial = new THREE.PointsMaterial( { size: pointSize * 5, sizeAttenuation: false, vertexColors: THREE.VertexColors } );
 
 var evaluator;
 var yCoords = [];
@@ -297,6 +300,10 @@ function toggleControl(b) {
             controls.enabled = b;
             controls.update();
         }
+        if (mode3D) {
+            controls.enabled = b;
+            controls.update();
+        }
     }
 }
 
@@ -357,47 +364,79 @@ function onDocumentMouseMove( event ) {
     event.preventDefault();
     if (isRecording) {
         if (mouseDown == true) {
-            var cursor = get3DCoord();
+            if (move2D) {
+                var cursor = get3DCoord();
 
-            if (isRotating) {
+                if (isRotating) {
 
-                rotatingBox.rotate(cursor);
+                    rotatingBox.rotate(cursor);
 
-            } else if (isResizing) {
+                } else if (isResizing) {
 
-                // cursor's y coordinate nudged to make bounding box matrix invertible
-                cursor.y -= 0.00001;
+                    // cursor's y coordinate nudged to make bounding box matrix invertible
+                    cursor.y -= 0.00001;
 
-                resizeBox.resize(cursor);
+                    resizeBox.resize(cursor);
 
-            } else if (isMoving) {
+                } else if (isMoving) {
 
-                selectedBox.translate(cursor);
-                // selectedBox.changeBoundingBoxColor(new THREE.Color( 0,0,7 ));
-                selectedBox.changeBoundingBoxColor(selected_color.clone());
-            } else {
+                    selectedBox.translate(cursor);
+                    // selectedBox.changeBoundingBoxColor(new THREE.Color( 0,0,7 ));
+                    selectedBox.changeBoundingBoxColor(selected_color.clone());
+                } else {
+                    // if we are initoally drawing a new bounding box,
+                    // we would like to add it to the scene
+                    if (newBox != null && !newBox.added) {
+                        scene.add(newBox.points);
+                        scene.add(newBox.boxHelper);
+                        newBox.added = true;
+                    }
 
-                // if we are initoally drawing a new bounding box, 
-                // we would like to add it to the scene
-                if (newBox != null && !newBox.added) {
-                    scene.add(newBox.points);
-                    scene.add( newBox.boxHelper );
-                    newBox.added = true;
+                    newBox.resize(cursor);
                 }
-
-                newBox.resize(cursor);
+            }
+            else if (mode3D) {
+                if (isReHeighting) {
+                    var mouse = get3DIntersectPlane();
+                    // console.log(cursor);
+                    reheightBox.reheight(mouse);
+                }
 
             }
         }
 
-        var cursor = getCurrentPosition();
-        if (!controls.enabled) {
-            // highlights all hover boxes that intersect with cursor
-            updateHoverBoxes(cursor);
+        if (move2D) {
+            var cursor = getCurrentPosition();
+             if (!controls.enabled) {
+                // highlights all hover boxes that intersect with cursor
+                updateHoverBoxes(cursor);
 
-            // highlights closest corner point that intersects with cursor
-            highlightCorners();
-        } 
+                // highlights closest corner point that intersects with cursor
+                highlightCorners();
+            }
+        }
+        else if (mode3D) {
+            var intersect = get3DIntersect();
+            if (!controls.enabled) {
+                if (intersect.intersect != null) {
+                    // console.log(intersect);
+                    // intersect.idx is box index
+                    if (hoverBox != null && hoverIdx != null) {
+                        hoverBox.changePointColor(hoverIdx, new THREE.Color(0xff0000));
+                    }
+                    hoverBox = boundingBoxes[intersect.idx];
+                    // point index:
+                    hoverIdx = intersect.intersect.index;
+                    hoverBox.changePointColor(hoverIdx, new THREE.Color(0x00ff33));
+                } else {
+                    if (hoverBox) {
+                        // hoverBox.changePointColor(hoverIdx, new THREE.Color(7, 0, 0));
+                        hoverBox.changePointColor(hoverIdx, new THREE.Color(0xff0000));
+                    }
+                    hoverBox = null;
+                }
+            }
+        }
     }
 }
 
@@ -466,11 +505,18 @@ function onDocumentMouseUp( event ) {
             evaluator.increment_rotate_count();
             predictBox = rotatingBox;
         }
+        if (isReHeighting) {
+            evaluator.increment_resize_count();
+            predictBox = reheightBox;
+            scene.remove(dispPlane);
+            dispPlane = null;
+        }
         if (predictBox) {
             predictLabel(predictBox);            
         }
         isResizing = false;
         isRotating = false;
+        isReHeighting = false;
         // if (isMoving) {
         //     changeBoundingBoxColor(hoverBoxes[0], new THREE.Color( 7,0,0 ));
         // }
@@ -493,45 +539,71 @@ function onDocumentMouseDown( event ) {
     if (isRecording) {
         if (!controls.enabled) {
             mouseDown = true;
-            anchor = get3DCoord();
-            var intersection = intersectWithCorner();
-            // console.log("intersection: ", intersection);
-            // update hover box
-            if (selectedBox && (hoverBoxes.length == 0 || hoverBoxes[0] != selectedBox)) {
-                selectedBox.changeBoundingBoxColor(0xffff00);
-                selectedBox = null;
-                isMoving = false;
-            }
-
-            if (intersection != null) {
-                var box = intersection[0];
-                var closestIdx = closestPoint(anchor, box.geometry.vertices);
-                // console.log("closest: ", closestIdx);
-                // 4th node is for rotation
-                if (closestIdx == 4) {
-                    isRotating = true;
-                    rotatingBox = box;
-                } else {
-                    isResizing = true;
-                    resizeBox = box;
-                    resizeBox.anchor = resizeBox.geometry.vertices[getOppositeCorner(closestIdx)].clone();
+            if (mode3D) {
+                var intersect = get3DIntersect();
+                if (selectedBox && (hoverBoxes.length == 0 || hoverBoxes[0] != selectedBox)) {
+                    selectedBox.changeBoundingBoxColor(0xffff00);
+                    selectedBox = null;
+                    isMoving = false;
                 }
-            } else if (hoverBoxes.length == 1) {
-                isMoving = true;
-                hoverBoxes[0].select(get3DCoord());
-                selectRow(selectedBox.id);
 
-            } else {
-                angle = camera.rotation.z;
-                var v = anchor.clone();
-                anchor.x += .000001;
-                anchor.y -= .000001;
-                anchor.z += .000001;
-                newBoundingBox = new THREE.Box3(anchor, v);
-                newBoxHelper = new THREE.Box3Helper( newBoundingBox, 0xffff00 );
-                anchor = anchor.clone();
+                if (intersect.intersect != null) {
+                    var box = boundingBoxes[intersect.idx];
+                    var closestIdx = intersect.intersect.index;
+                    console.log("closestIdx",closestIdx);
+                    // console.log("box.geometry.vertices", box.geometry.vertices);
+                    // console.log("anchor", anchor);
+                    // 5th node is for reheighting
+                    if (closestIdx == 5) {
+                        isReHeighting = true;
+                        reheightBox = box;
+                        reheightBox.anchor = reheightBox.geometry.vertices[getOppositeCorner(closestIdx)].clone();
+                        console.log("reheightBox.anchor",reheightBox.anchor);
+                        dispPlane = get3DVerticalCoord(reheightBox);
+                    }
+                }
+            }
+            else if (move2D) {
+                anchor = get3DCoord();
+                var intersection = intersectWithCorner();
+                // console.log("intersection: ", intersection);
+                // update hover box
+                if (selectedBox && (hoverBoxes.length == 0 || hoverBoxes[0] != selectedBox)) {
+                    selectedBox.changeBoundingBoxColor(0xffff00);
+                    selectedBox = null;
+                    isMoving = false;
+                }
 
-                newBox = new Box(anchor, v, angle, newBoundingBox, newBoxHelper, data);
+                if (intersection != null) {
+                    var box = intersection[0];
+                    var closestIdx = closestPoint(anchor, box.geometry.vertices);
+                    // console.log("closest: ", closestIdx);
+                    // 4th node is for rotation
+                    if (closestIdx == 4) {
+                        isRotating = true;
+                        rotatingBox = box;
+                    } else {
+                        isResizing = true;
+                        resizeBox = box;
+                        resizeBox.anchor = resizeBox.geometry.vertices[getOppositeCorner(closestIdx)].clone();
+                    }
+                } else if (hoverBoxes.length == 1) {
+                    isMoving = true;
+                    hoverBoxes[0].select(get3DCoord());
+                    selectRow(selectedBox.id);
+
+                } else {
+                    angle = camera.rotation.z;
+                    var v = anchor.clone();
+                    anchor.x += .000001;
+                    anchor.y -= .000001;
+                    anchor.z += .000001;
+                    newBoundingBox = new THREE.Box3(anchor, v);
+                    newBoxHelper = new THREE.Box3Helper(newBoundingBox, 0xffff00);
+                    anchor = anchor.clone();
+
+                    newBox = new Box(anchor, v, angle, newBoundingBox, newBoxHelper, data);
+                }
             }
         }
     }
@@ -657,6 +729,7 @@ function moveMode( event ) {
             // console.log(box);
         }
         move2D = false;
+        mode3D = true;
     }
 }
 
@@ -680,6 +753,7 @@ function select2DMode() {
     controls.enabled = true;
     controls.update();
     move2D = true;
+    mode3D = false;
 }
 
 function move2DMode( event ) {
@@ -709,6 +783,7 @@ function move2DMode( event ) {
         controls.enabled = true;
         controls.update();
         move2D = true;
+        mode3D = false;
     }
     
 }
