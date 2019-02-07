@@ -1,24 +1,5 @@
-# LiDAR Annotator
-## Bernie Wang, Virginia Wu, Bichen Wu, Kurt Keutzer
-LiDAR annotation tool using ray tracing and bounding boxes.
-![Alt Text](https://github.com/bernwang/LiDAR-annotator/blob/evaluation/gifs/step1.gif)
-Demo Video: [https://www.youtube.com/watch?v=QWjWpqvYA_c](https://www.youtube.com/watch?v=QWjWpqvYA_c&feature=youtu.be)
-
-# For people using the annotator for the efficiency test
-1. There are 10 frames (.bin files) in /test/velodyne_points/data. 
-2. You can load multiple frames at once. Frames take between 2-8 minutes to annonate based now how many objects are in the scene. You should load a few frames at a time (~3-5), and doing them in batches, in the case of lost data. Data is exported only after all selected frames are annotated. Please note that if the page is refreshed or if the window is closed, all progress is lost. 
-3. There is a record button so that you can pause the test if you want. Note that if you pause the test, you will be forced into "2D mode" and cannot draw boxes. Click on the button again to resume recording. Recording will be automatically paused when you move onto a new fram. 
-4. To move onto the next frame, click "Next frame". You cannot go back to a previous frame.
-5. Please look at the "controls" section to understand how to draw/edit bounding boxes. Read "my strategy for annotating" for a quickstart on annotating. In my opinion, this is the most efficient way to annotate with this current version for people who are new. 
-6. After all frames in the batch are annotated, a JSON file will be exported. You can choose to name it whatever you want, as only the data stored is important. It is okay if the annotations are in several JSON files as annotating in batches is recommended. 
-7. Thank you for participating in the efficiency test! Your time and effort goes into making the LiDAR annotater better!
-
-
-# My strategy for annotating
-1. Go into "draw" mode. Draw bounding boxes for all objects of interest (i.e. vehicles, pedestrians, cyclists). 
-2. Then, in "3D mode", for each row in the Object ID table, click on the object number, and its corresponding bounding box will turn blue. Then adjust the object id (car, van, truck, etc.) to what you think that object is. If the object is not an object of interest, just hit the delete or backspace key to delete the bounding box. 
-3. If you miss any object of interest, go back to "draw" mode to draw a bounding box for it.
-4. Repeat (1) through (3) until you think that all objects of interest are covered.
+# 3D LiDAR Annotator
+## forked from bernwang/LiDAR-annotator
 
 # Usage
 1. Clone the repository
