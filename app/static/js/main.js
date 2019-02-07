@@ -29,6 +29,7 @@ var angle;
 var hoverIdx, hoverBox;
 var resizeBox, rotatingBox, reheightBox;
 var dispPlane;
+var temp_anchor;
 var isResizing = false;
 var isMoving = false;
 var isRotating = false;
@@ -398,8 +399,9 @@ function onDocumentMouseMove( event ) {
             else if (mode3D) {
                 if (isReHeighting) {
                     var mouse = get3DIntersectPlane();
-                    // console.log(cursor);
-                    reheightBox.reheight(mouse);
+                    console.log("mouse",mouse);
+                    console.log("mouse_move temp anchor",temp_anchor[0]);
+                    reheightBox.reheight(mouse, temp_anchor);
                 }
 
             }
@@ -510,6 +512,7 @@ function onDocumentMouseUp( event ) {
             predictBox = reheightBox;
             scene.remove(dispPlane);
             dispPlane = null;
+            temp_anchor = null;
         }
         if (predictBox) {
             predictLabel(predictBox);            
@@ -558,7 +561,9 @@ function onDocumentMouseDown( event ) {
                         isReHeighting = true;
                         reheightBox = box;
                         reheightBox.anchor = reheightBox.geometry.vertices[getOppositeCorner(closestIdx)].clone();
+                        temp_anchor = reheightBox.geometry.clone();
                         console.log("reheightBox.anchor",reheightBox.anchor);
+                        console.log("temp_anchor",temp_anchor);
                         dispPlane = get3DVerticalCoord(reheightBox);
                     }
                 }

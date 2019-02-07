@@ -139,30 +139,22 @@ function Box(anchor, cursor, angle, boundingBox, boxHelper, data) {
     }
 
     // method to reheight the 3D bounding box manually, only under 3D mode
-    this.reheight = function (mouse) {
+    this.reheight = function (mouse, originalVertices) {
         if (mouse.z != this.anchor.y) {
-//             console.log(mouse.z);
-
-            // var v1 = cursor.clone();
-            // var v2 = this.anchor.clone();
-            //
-            // v1.y = 0;
-            // v2.y = 0;
-            //
-            // // rotate cursor and anchor
-            // rotate(v1, v2, this.angle);
+            console.log("this.angle",this.angle)
 
             // calculating corner points and rotating point
-            var maxVector = this.geometry.vertices[0].clone();
+            console.log(originalVertices.vertices[0]);
+            var maxVector = originalVertices.vertices[0].clone();
             maxVector.y = 0;
-            var minVector = this.geometry.vertices[1].clone();
+            var minVector = originalVertices.vertices[1].clone();
             minVector.y = 0;
-            var topLeft = this.geometry.vertices[2].clone();
+            var topLeft = originalVertices.vertices[2].clone();
             topLeft.y = 0;
-            var bottomRight = this.geometry.vertices[3].clone();
+            var bottomRight = originalVertices.vertices[3].clone();
             bottomRight.y = 0;
             var topCenter = getCenter(maxVector, topLeft);
-            var bottomCenter = this.geometry.vertices[4].clone();
+            var bottomCenter = originalVertices.vertices[4].clone();
             bottomCenter.y = 0;
 
             var bottom = this.centerZ - this.heightCar/2;
@@ -182,20 +174,6 @@ function Box(anchor, cursor, angle, boundingBox, boxHelper, data) {
             // need to do this to make matrix invertible
             maxVector.y += 0.00001;
 
-            // setting bounding box limits
-            this.boundingBox.set(minVector.clone(), maxVector.clone());
-
-            // rotate BoxHelper back
-            this.boxHelper.rotation.y = this.angle;
-
-            // setting y coordinate back to zero since we are done with drawing
-            // maxVector.y = 0;
-
-            // rotate back the corner points
-            rotate(minVector, maxVector, -this.angle);
-            rotate(topLeft, bottomRight, -this.angle);
-            rotate(topCenter, bottomCenter, -this.angle);
-
             // set updated corner points used to resize box
             this.geometry.vertices[0] = maxVector.clone();
             this.geometry.vertices[1] = minVector.clone();
@@ -205,8 +183,21 @@ function Box(anchor, cursor, angle, boundingBox, boxHelper, data) {
             // this.geometry.vertices[5] = lowCenter.clone();
             this.geometry.vertices[5] = highCenter.clone();
 
+            // rotate back the corner points
+            rotate(minVector, maxVector, this.angle);
+            rotate(topLeft, bottomRight, this.angle);
+            rotate(topCenter, bottomCenter, this.angle);
+            this.boxHelper.rotation.y = this.angle;
+
+            // setting bounding box limits
+            this.boundingBox.set(minVector.clone(), maxVector.clone());
             this.boundingBox.max.y = this.centerZ + this.heightCar/2;
             this.boundingBox.min.y = this.centerZ - this.heightCar/2;
+            console.log("Boundingbox min",boundingBox.min);
+            console.log("Boundingbox max",boundingBox.max);
+
+            // rotate BoxHelper back
+            this.boxHelper.rotation.y = this.angle;
 
             // tell scene to update corner points
             this.geometry.verticesNeedUpdate = true;
