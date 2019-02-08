@@ -1,11 +1,12 @@
 # 3D LiDAR Annotator
 ## forked from bernwang/LiDAR-annotator
+![](annotation_presentation.gif)
 
 # Usage
 1. Clone the repository
-2. To launch the app, just open index.html on your browser.
+2. To launch the app, use python to run the app.py in app/ folder.
 3. Load LiDAR data (see LiDAR format). 
-4. To draw a bounding box, simply hold your mouse down and drag across the screen. See "Controls" section to learn more about user interface. 
+4. To draw a bounding box, starting recording first and then simply hold mouse down and drag across the screen with your ctrl down. See "Controls" section to learn more about user interface. 
 5. To *export* your bounding boxes, click on the "save" button to the top-left.
 
 # Controls
@@ -13,6 +14,7 @@
 1. Left click and drag to orbit around the point cloud
 2. Right click and drag to translate.
 3. You can label objects in "3D" mode (see "labelling bounding boxes")
+4. You can also adjust the height of the 3D bounding box with ctrl down and click and drag the center point. 
 
 ## "2D/Draw" mode
 (Note: While in "2D move" mode, hold the control key to be in "draw mode")
