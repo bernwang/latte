@@ -2,7 +2,6 @@ from flask import Flask, render_template, request, jsonify
 from bounding_box import BoundingBox
 from pointcloud import PointCloud
 from tracker import Tracker
-from predict_label import predict_label
 import numpy as np
 import json
 
@@ -41,10 +40,7 @@ def updateBoundingBoxes():
 
 @app.route("/predictLabel", methods=['POST'])
 def predictLabel():
-	json_request = request.get_json()
-	json_data = json.dumps(json_request)
-	filename = json_request['filename'].split('.')[0]	
-	return str(predict_label(json_data, filename))
+	return str('Car')
 
 if __name__ == "__main__":
 	tracker = Tracker()

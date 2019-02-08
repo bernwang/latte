@@ -47,6 +47,79 @@ function get3DCoord() {
     return pos;
 }
 
+function get3DVerticalCoord(box) {
+    var a = box.geometry.vertices[5];
+    var b = box.geometry.vertices[4];
+
+    var centroid = box.geometry.vertices[5];
+    var dir = new THREE.Vector3(a.x-b.x,a.y-b.y,a.z-b.z);
+    var plane = new THREE.Plane();
+    plane.setFromNormalAndCoplanarPoint(dir, centroid).normalize();
+
+    // Create a basic rectangle geometry
+    var planeGeometry = new THREE.PlaneGeometry(15, 15);
+
+    // Align the geometry to the plane
+    var coplanarPoint = plane.coplanarPoint();
+    // console.log("coplanerPoint", coplanarPoint);
+    var focalPoint = new THREE.Vector3().copy(coplanarPoint).add(plane.normal);
+    planeGeometry.lookAt(focalPoint);
+    // planeGeometry.translate(coplanarPoint.x, coplanarPoint.y, coplanarPoint.z);
+
+    // Create mesh with the geometry
+    var planeMaterial = new THREE.MeshBasicMaterial({color:0x00ff33,
+        side: THREE.DoubleSide, transparent: true, opacity: 0});
+    var dispPlane = new THREE.Mesh(planeGeometry, planeMaterial);
+    dispPlane.position.set(a.x, a.y, a.z);
+    scene.add(dispPlane);
+
+    return dispPlane;
+}
+
+// 3D intersection to plane using for reheight
+function get3DIntersectPlane() {
+    var mouse = new THREE.Vector3();
+
+    mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+    mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+
+    var raycaster = new THREE.Raycaster();
+    raycaster.setFromCamera(mouse, camera);
+
+    var intersects = raycaster.intersectObject(dispPlane);
+//     console.log("intersects", intersects);
+    mouse.z = intersects[0].point.y;
+
+
+    return mouse;
+
+}
+
+// 3D intersection to point
+function get3DIntersect() {
+
+    var mouse = new THREE.Vector2();
+
+    mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+    mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+
+    var raycaster = new THREE.Raycaster();
+    raycaster.setFromCamera(mouse, camera);
+
+    for (var i = 0; i < boundingBoxes.length; i++) {
+        var box = boundingBoxes[i];
+        var intersects = raycaster.intersectObject(box.points);
+        if (intersects.length != 0) {
+            break
+        }
+    }
+    if (intersects.length == 0) {
+        return {intersect: null, idx: null};
+    }
+    // return intersect object and index of the bounding box
+    return {intersect: intersects[0], idx: i};
+}
+
 function getMaxElement(arr) {
     var max = Number.NEGATIVE_INFINITY;
     for (var i = 0; i< arr.length; i++) {
@@ -179,11 +252,13 @@ function closestPoint(p, vertices) {
             closestIdx = i;
         }
     }
+    // console.log(closestIdx);
     return closestIdx;
 }
 
-function save(boundingBoxes) {
-  var outputBoxes = []
+function save() {
+  alert("Saving to test.json");
+  var outputBoxes = [];
   for (var i = 0; i < boundingBoxes.length; i++) {
     outputBoxes.push(new OutputBox(boundingBoxes[i]));
   }
