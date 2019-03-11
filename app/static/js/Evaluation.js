@@ -1,16 +1,4 @@
 function Evaluation() {
-	// this.test_filenames = [
-	// 	"0000000001.bin",
-	// 	"0000000013.bin",
-	// 	"0000000022.bin",
-	// 	"0000000049.bin",
-	// 	"0000000128.bin",
-	// 	"0000000003.bin",
-	// 	"0000000019.bin",
-	// 	"0000000023.bin",
-	// 	"0000000060.bin",
-	// 	"0000000133.bin"
-	// 	];
 	this.test_data = [];
 	this.filenames = [];
 	this.index = 0;
@@ -53,13 +41,26 @@ function Evaluation() {
 		this.evaluators.push(evaluator);
 	}
 	
-	// writes json ouput for current frame
+	// writes json output for current frame
 	this.write_frame = function() {
 		var output_evaluator = this.evaluators[this.evaluators.length-1].output();
 		var output = {"frame": output_evaluator};
 		var stringifiedOutput = JSON.stringify(output);
-		var file = new File([stringifiedOutput], this.get_filename().split(".")[0] + ".json", {type: "/json;charset=utf-8"});
-		saveAs(file);
+		// var file = new File([stringifiedOutput], this.get_filename().split(".")[0] + ".json", {type: "/json;charset=utf-8"});
+		// saveAs(file);
+		$.ajax({
+            url: '/writeOutput',
+            data: JSON.stringify({output: {filename: evaluator.get_filename(), 
+                                            file: stringifiedOutput}}),
+            type: 'POST',
+            contentType: 'application/json;charset=UTF-8',
+            success: function(response) {
+                console.log("successfully saved output")
+            },
+            error: function(error) {
+                console.log(error);
+            }
+        });
 	}
 
 	// writes json output for all frames

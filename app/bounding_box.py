@@ -28,29 +28,4 @@ class BoundingBox():
 
 		bounded_indices = np.intersect1d(indices_within_width, indices_within_length)
 		return bounded_indices
-
-
-	# def filter_points2(self, pointcloud):
-	# 	l, w, theta = self.length, self.width, self.angle
-	# 	cx, cy = self.x, self.y
-	# 	m = np.tan(theta)
-	# 	if np.isclose(theta, np.pi / 2) or np.isclose(theta, np.pi * 3 / 2):
-	# 		filter_fn = lambda point : (point[0] <= cx + bounding_factor * w and 
-	# 									point[0] >= cx - bounding_factor * w)
-	# 		# filter_fn_y = lambda point : (point[1] <= cy + bounding_factor * l and 
-	# 		# 							  point[1] >= cy - bounding_factor * l)
-	# 	else:
-	# 		upper_x = cx + l / 2 * np.cos(theta) + w / 2 * np.cos(np.pi / 2 + theta)
-	# 		upper_y = cy + l / 2 * np.sin(theta) + w / 2 * np.sin(np.pi / 2 + theta)
-	# 		b_upper = upper_y - m * upper_x
-
-	# 		lower_x = cx - l / 2 * np.cos(theta) - w / 2 * np.cos(np.pi / 2 + theta)
-	# 		lower_y = cy - l / 2 * np.sin(theta) - w / 2 * np.sin(np.pi / 2 + theta)
-	# 		b_lower = lower_y - m * lower_x
-
-	# 		filter_fn = lambda point : (point[1] >= m * point[0] + b_lower - w * bounding_factor and 
-	# 									point[1] <= m * point[0] + b_upper + w * bounding_factor)
-
-	# 	filtered_pointcloud = filter(filter_fn, pointcloud.points)
-
-	# 	return list(filtered_pointcloud)
+		

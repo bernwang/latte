@@ -31,6 +31,7 @@ function Box(anchor, cursor, angle, boundingBox, boxHelper) {
     this.geometry.vertices.push(getCenter(anchor.clone(), cursor.clone()));
 
     this.hasPredictedLabel = false;
+    this.text_label;
 
     this.get_center = function() {
         var center3D = getCenter(this.geometry.vertices[0], this.geometry.vertices[1]);
@@ -199,6 +200,63 @@ function Box(anchor, cursor, angle, boundingBox, boxHelper) {
         return Math.min(distance2D(this.geometry.vertices[0], this.geometry.vertices[2]),
             distance2D(this.geometry.vertices[0], this.geometry.vertices[1])) / 4;
     }
+
+    this.add_text_label = function() {
+        var text = this.create_text_label();
+        text.setHTML("HIIIIIII");
+        text.setParent(this.boxHelper);
+        console.log(this.boxHelper)
+        // this.textlabels.push(text);
+        container.appendChild(text.element);
+        console.log("added text");
+        console.log(text);
+        this.text_label = text;
+    }
+
+    this.create_text_label = function() {
+        var div = document.createElement('div');
+        div.className = 'text-label';
+        div.style.position = 'absolute';
+        div.style.width = 100;
+        div.style.height = 100;
+        div.innerHTML = "hi there!";
+        div.style.top = -1000;
+        div.style.left = -1000;
+    
+        var _this = this;
+
+        
+    
+        return {
+          element: div,
+          parent: false,
+          position: new THREE.Vector3(0,0,0),
+          setHTML: function(html) {
+            this.element.innerHTML = html;
+          },
+          setParent: function(threejsobj) {
+            this.parent = threejsobj;
+          },
+          updatePosition: function() {
+            console.log("uodatePosition1");
+            if(parent) {
+              this.position.copy(this.parent.position);
+            }
+            console.log("uodatePosition2");
+            
+            var coords2d = this.get2DCoords(this.position, camera);
+            this.element.style.left = coords2d.x + 'px';
+            this.element.style.top = coords2d.y + 'px';
+          },
+          get2DCoords: function(position, camera) {
+            var vector = position.project(camera);
+            vector.x = (vector.x + 1)/2 * window.innerWidth;
+            vector.y = -(vector.y - 1)/2 * window.innerHeight;
+            console.log("get2DCoords");
+            return vector;
+          }
+        };
+    }
 }
     
 
@@ -254,26 +312,25 @@ function getAngle(origin, v1, v2, v3) {
 function highlightCorners() {
     // get closest intersection with cursor
     var intersection = intersectWithCorner();
-
     if (intersection) {
-            // get closest point and its respective box
-            var box = intersection[0];
-            var p = intersection[1];
+        // get closest point and its respective box
+        var box = intersection[0];
+        var p = intersection[1];
 
-            // get index of closest point
-            var closestIdx = closestPoint(p, box.geometry.vertices);
+        // get index of closest point
+        var closestIdx = closestPoint(p, box.geometry.vertices);
 
-            // if there was a previously hovered box, change its color back to red
-            if (hoverBox) {
-                // hoverBox.changePointColor(hoverIdx, new THREE.Color(7, 0, 0));
-                hoverBox.changePointColor(hoverIdx, hover_color.clone());
-            }
+        // if there was a previously hovered box, change its color back to red
+        if (hoverBox) {
+            // hoverBox.changePointColor(hoverIdx, new THREE.Color(7, 0, 0));
+            hoverBox.changePointColor(hoverIdx, hover_color.clone());
+        }
 
-            // update hover box
-            hoverBox = box;
-            hoverIdx = closestIdx;
-            // hoverBox.changePointColor(hoverIdx, new THREE.Color(0, 0, 7));
-            hoverBox.changePointColor(hoverIdx, selected_color.clone());
+        // update hover box
+        hoverBox = box;
+        hoverIdx = closestIdx;
+        // hoverBox.changePointColor(hoverIdx, new THREE.Color(0, 0, 7));
+        hoverBox.changePointColor(hoverIdx, selected_color.clone());
 
     } else {
 
@@ -293,9 +350,9 @@ function highlightCorners() {
 
 // method to add box to boundingBoxes and object id table
 function addBox(box) {
-    boundingBoxes.push(box);
+    app.cur_frame.bounding_boxes.push(box);
     id++;
-    addRow(box);
+    addObjectRow(box);
 }
 
 function stringifyBoundingBoxes(boundingBoxes) {
@@ -305,6 +362,47 @@ function stringifyBoundingBoxes(boundingBoxes) {
     }
     console.log(outputBoxes);
     return outputBoxes;
+}
+
+function createBox(anchor, v, angle) {
+    newBoundingBox = new THREE.Box3(v, anchor);
+    newBoxHelper = new THREE.Box3Helper( newBoundingBox, 0xffff00 );
+    newBox = new Box(anchor, v, angle, newBoundingBox, newBoxHelper);
+    newBox.resize(v);
+    scene.add(newBox.points);
+    scene.add( newBox.boxHelper );
+    return newBox;
+}
+
+// deletes selected box when delete key pressed
+function deleteSelectedBox() {
+    var boundingBoxes = app.cur_frame.bounding_boxes;
+    if (selectedBox) {
+        scene.remove(selectedBox.points);
+        scene.remove(selectedBox.boxHelper);
+
+        // deletes corresponding row in object id table
+        deleteRow(selectedBox.id);
+
+        // removes selected box from array of currently hovered boxes
+        for (var i = 0; i < hoverBoxes.length; i++) {
+            if (hoverBoxes[i] == selectedBox) {
+                hoverBoxes.splice(i, 1);
+                break;
+            }
+        }
+
+        // removes selected box from array of bounding boxes
+        for (var i = 0; i < boundingBoxes.length; i++) {
+            if (boundingBoxes[i] == selectedBox) {
+                boundingBoxes.splice(i, 1);
+                break;
+            }
+        }
+        // evaluator.increment_delete_count();
+        // removes selected box
+        selectedBox = null;
+    }
 }
 
 

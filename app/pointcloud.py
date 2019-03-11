@@ -8,6 +8,15 @@ class PointCloud():
 		self.points = points
 		self.intensities = intensities
 
+	# @staticmethod
+	# def parse_json(json_pointcloud):
+	# 	points = np.vstack([np.array([json_pointcloud[i]["z"],
+	# 								  json_pointcloud[i]["x"],
+	# 								  json_pointcloud[i]["y"]]
+	# 								)
+	# 					   for i in range(len(json_pointcloud))])
+		# return points
+
 	@staticmethod
 	def parse_json(json_pointcloud, json_intensities):
 		intensities = np.array(json_intensities)

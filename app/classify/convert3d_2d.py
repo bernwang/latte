@@ -15,6 +15,8 @@ import matplotlib.pyplot as plt
 from calib import Calib
 import getCoord as getCoord
 import math
+from skimage import io
+import config
 
 current_dir_path = os.path.dirname(os.path.realpath(__file__))
 # print(current_dir_path)
@@ -23,8 +25,13 @@ bin_ab_path = current_dir_path+'/data/bin_data/'
 # print("image path: ", image_ab_path)
 # print("bin path: ", bin_ab_path)
 
+def rotation_matrix(theta):
+    return np.array([[np.cos(theta), -np.sin(theta)], 
+                     [np.sin(theta), np.cos(theta)]])
+
 def generate_2d_lidar():
-    calib = Calib('/Users/berniewang/annotator/lidarAnnotator/app/classify/calib')
+    # calib = Calib('/Users/berniewang/annotator/lidarAnnotator/app/classify/calib')
+    calib = Calib(config.CALIBRATION_PATH)
      # load image
     img_name = getCoord.getPictureName()
     # print("image path again: ", os.path.join(image_ab_path+img_name))
@@ -37,7 +44,7 @@ def generate_2d_lidar():
     # print(bin_name)
     scan = np.fromfile(
         os.path.join(bin_ab_path+bin_name),
-        dtype=np.float32).reshape((-1, 4))
+        dtype=np.float32).astype(float).reshape((-1, 4))
     #im_coord0 = calib.velo2img(scan[:, :3], 2).astype(np.int)
 
     x = getCoord.getX()
@@ -46,6 +53,7 @@ def generate_2d_lidar():
     length = getCoord.getLength()
     angle = getCoord.getAngle()
     image_path = []
+
     
     for i in range(len(x)):
         a = x[i]
@@ -53,23 +61,30 @@ def generate_2d_lidar():
         c = width[i]/2
         d = length[i]/2
         e = angle[i]
+
+        transformed_pc = (scan[:,:2] - np.array([a, b])).dot(rotation_matrix(-e).T)
         out_of_fov = False
         a_array = np.array([0],dtype = np.float32)
+        print(scan, len(scan))
         for j in range(len(scan)):
-            if scan[j][0] > a - c and scan[j][0] < a + c and scan[j][1] > b - d and scan[j][1]< b + d:
+            # if abs(scan[j][0]) <= c and abs(scan[j][1]) <= d:
+            if abs(transformed_pc[j][0]) <= c and abs(transformed_pc[j][1]) <= d:
 
-            #if scan[j][0] > a - c * abs(math.cos(e)) and scan[j][0] < a + c * abs(math.cos(e)) and scan[j][1] > b - d * abs(math.cos(e)) and scan[j][1]< b + d * abs(math.cos(e)):
+            # if scan[j][0] > a - c * abs(math.cos(e)) and scan[j][0] < a + c * abs(math.cos(e)) and scan[j][1] > b - d * abs(math.cos(e)) and scan[j][1]< b + d * abs(math.cos(e)):
                 a_array = np.append(a_array,scan[j])
                 #if scan[j][0] > a - c and scan[j][0] < a + c and scan[j][1] > b - d and scan[j][1]< b + d:
+        
         a_array = np.delete(a_array,0)
 
         a_array = a_array.reshape((int(len(a_array)/4),4))
-
-        a_array.tofile(os.path.join(current_dir_path, "a.bin"))
+        
+        print(a_array, len(a_array))
+        a_array.astype(np.float32).tofile(os.path.join(current_dir_path, "a.bin"))
 
         scan2 = np.fromfile(
             os.path.join(current_dir_path, 'a.bin'),
-            dtype=np.float32).reshape((-1, 4))
+            dtype=np.float32).astype(float).reshape((-1, 4))
+
         im_coord = calib.velo2img(scan2[:, :3], 2).astype(np.int)
         # plt.imshow(im)
         im_coord2 = [im_coord[i] for i in range(len(im_coord)) if im_coord[i][0] > 0 and im_coord[i][0] <= w and im_coord[i][1] > 0 and im_coord[i][1] <= h]
@@ -111,20 +126,24 @@ def generate_2d_lidar():
         box = (x_min, y_min,x_max, y_max)
         image1 = im.crop(box)#图像裁剪
         # image1.show()
-        image1.save("/Users/berniewang/annotator/lidarAnnotator/app/classify/inception/%d.jpg"%(i+1))
+        image1.save("{}/{}.jpg".format(config.IMAGE_OUTPUT_PATH, i+1))
         if not out_of_fov:
-            image_path.append("/Users/berniewang/annotator/lidarAnnotator/app/classify/inception/%d.jpg"%(i+1))
+            image_path.append("{}/{}.jpg".format(config.IMAGE_OUTPUT_PATH, i+1))
         else:
             image_path.append("")
         for i in range(len(im_coord)):
             x_arr.append(im_coord[i][0])
             y_arr.append(im_coord[i][1])
 
-
+        # plt.imshow(im)
         # plt.scatter(x_arr,y_arr,s = 1)
         # plt.show()
         # plt.imshow(np.asarray(image1))
         # plt.show()
+        if not out_of_fov:
+            DIR_PATH = os.path.dirname(os.path.realpath(__file__))
+            io.imsave(os.path.join(DIR_PATH, "../static/images/cropped_image.jpg"), image1)
+
     return image_path
 
 

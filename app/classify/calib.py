@@ -7,8 +7,8 @@ print("root: ", root_dir)
 data_dir = os.path.join(root_dir, 'data')
 image_shape = 375, 1242
 
-def get_drive_dir(drive, date='2011_09_26'):
-    return os.path.join(data_dir, date, date + '_drive_%04d_sync' % drive)
+# def get_drive_dir(drive, date='2011_09_26'):
+#     return os.path.join(data_dir, date, date + '_drive_%04d_sync' % drive)
 
 
 def get_inds(path, ext='.png'):
@@ -122,7 +122,6 @@ class Calib(object):
         RT_velo2cam = np.eye(4)
         RT_velo2cam[:3, :3] = self.velo2cam['R'].reshape(3, 3)
         RT_velo2cam[:3, 3] = self.velo2cam['T']
-
         R_rect00 = np.eye(4)
         R_rect00[:3, :3] = self.cam2cam['R_rect_00'].reshape(3, 3)
 

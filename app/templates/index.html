@@ -7,24 +7,44 @@
 		<link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.6.0/css/font-awesome.min.css" rel="stylesheet">
 		<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 		<link href="static/styles/style.css" rel="stylesheet">
+		<link href="static/styles/imagePanels.css" rel="stylesheet">
+		<link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/smoothness/jquery-ui.css">
 	</head>
 
 	<body>
 		<nav class="tools">
 			<ul id="tools">
 				<!-- Commented out file input and export for evaluation -->
-				<li>
+				<!-- <li>
 					  <input type="file" id="file_input" class="inputfile" multiple>
-				</li>
+				</li> -->
 				
 
 				<!-- <li><a href="#" id="save"><i class="fa fa-floppy-o"></i></a></li> -->
-				<li><a href="#" id="next_frame"><i class="fas fa-caret-square-right">Next Frame</i></a></li>
-				<li><a href="#" class="selected" id="move"><i class="fa material-icons">3d_rotation</i></a></li>
-				<li><a href="#" id="move2D"><i class="fa fa-pencil"></i></a></li>
+				<!-- <li><a href="#" id="next_frame"><i class="fas fa-caret-square-right">Next Frame</i></a></li> -->
+				<li><a href="#" class="selected" id="move"><i class="fa material-icons">3d_rotation</i></a>
+				<a href="#" id="move2D"><i class="fa fa-pencil"></i></a></li>
+				<!-- <li><a href="#" id="move2D"><i class="fa fa-pencil"></i></a></li> -->
 				<!-- <li><a href="#" id="ids"><i class="fa fa-pencil"></i></a></li> -->
 				<li>
 					<button type='button' id='record' style="display: none;">Click to start recording</button>
+				</li>
+				<li>
+					<div>
+						<table id="frames-table">
+							<thead>
+								<tr style="display:block;" >
+									<td>Frames</td>
+									<td></td>
+								</tr>
+							</thead>
+							<tbody style="overflow-y: scroll; height:12em; display:block;">
+								
+							</tbody>
+							
+						</table>
+					</div>
+				</li>
 				<li>
 					<div>
 						<table id="object-table">
@@ -41,7 +61,13 @@
 						</table>
 					</div>
 				</li>
-
+				<li>
+					<!-- <div id="toggle"></div> -->
+					<div id="flip">Mask RCNN Labels</div>
+					<div id="panel"></div>
+					<div id="flip2">Object from Image</div>
+					<div id="panel2"></div>
+				</li>
 			</ul>
 
 
@@ -54,22 +80,26 @@
 		<div id="draw_bounding_box_reminder"><p></p></div>
 		<div id="footer"><p></p></div>
 
-
-    <script src="static/js/libs/three.min.js"></script>
-    <script src="static/js/libs/OrbitControls.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+	<script src="static/js/libs/three.min.js"></script>
+	<script src="static/js/init.js?nocache"></script>
+	<script src="static/js/frame.js?nocache"></script>
+    <script src="static/js/libs/OrbitControls.js?nocache"></script>
 	<script src="static/js/libs/Detector.js"></script>
 	<script src="static/js/libs/stats.min.js"></script>
 	<script src="static/js/libs/FileSaver.min.js"></script>
 	<script src="static/js/libs/dat.gui.min.js"></script>
-	<script src="static/js/box.js"></script>
-	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-	<script src="static/js/utils.js"></script>
-	<script src="static/js/pointcloud.js"></script>
-	<script src="static/js/ObjectTable.js"></script>
+	<script src="static/js/app.js?nocache"></script>
+	<script src="static/js/box.js?nocache"></script>
+	<script src="static/js/utils.js?nocache"></script>
+	<script src="static/js/pointcloud.js?nocache"></script>
+	<script src="static/js/ObjectTable.js?nocache"></script>
 	<script src="static/js/Box.js?nocache"></script>
+	<script src="static/js/Controls.js?nocache"></script>
 	<script src="static/js/Evaluation.js?nocache"></script>
 	<script src="static/js/Evaluator.js?nocache"></script>
-	
+	<script src="static/js/imagePanels.js?nocache"></script>
+	<script src="static/js/init.js?nocache"></script>
 	<script src="static/js/main.js?nocache"></script>
 
 

@@ -1,0 +1,33 @@
+#panel, #flip {
+    text-align: center;
+    background-color: #323232;
+    border: solid 1px #c3c3c3;
+}
+
+#panel {
+    display: none;
+    max-height: 15vh;
+}
+
+#panel img {
+	max-height:15vh; 
+	height: auto;
+	object-fit: contain;
+}
+
+#panel2, #flip2 {
+    text-align: center;
+    background-color: #323232;
+    border: solid 1px #c3c3c3;
+}
+
+#panel2 {
+    display: none;
+    max-height: 10vh;
+}
+
+#panel2 img {
+	max-height:10vh; 
+	height: auto;
+	object-fit: contain;
+}

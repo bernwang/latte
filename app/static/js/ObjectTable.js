@@ -9,11 +9,27 @@ var options = `<select>
     <option value="misc">Misc</option>
     /select`;
 
+
 // method to add row to object id table
-function addRow(box) {
-    $("#object-table tbody").append("<tr><td class='id'>" + box.id + "</td><td>" + options + "</td></tr>");
-    $("#object-table tbody select").last().focus();
+function addFrameRow(fname) {
+    $("{0} tbody".format(FRAMES_TABLE)).append(
+        "<tr><td><div class='fname'>{0}</div></td></tr>".format(fname)
+    );
 }
+
+// method to add row to object id table
+function addObjectRow(box) {
+    $("{0} tbody".format(OBJECT_TABLE)).append(
+        "<tr><td class='id'>{0}</td><td>{1}</td></tr>".format(box.id, options)
+    );
+    $("{0} tbody select".format(OBJECT_TABLE)).last().focus();
+}
+
+$(FRAMES_TABLE).on("mousedown", "tbody tr", function() {
+    var frameId = $(this).find('.fname').text();
+    console.log(frameId);
+    app.set_frame(frameId);
+})
 
 // handler that highlights input and corresponding bounding box when input is selected
 $("#object-table").on('mousedown', 'tbody tr', function() {
@@ -26,14 +42,14 @@ $("#object-table").on('mousedown', 'tbody tr', function() {
     var center = box.get_center();
     var current_angle = camera.rotation.z;
     console.log("current angle:", current_angle);
-    controls.target.set(center.x, 0, center.y);
+    // controls.target.set(center.x, 0, center.y);
     
     // controls.target.set(0, 0, 0);
-    camera.updateProjectionMatrix();
-    controls.update();
+    // camera.updateProjectionMatrix();
+    // controls.update();
     
-    controls.update();
-    camera.rotation.z = current_angle;
+    // controls.update();
+    // camera.rotation.z = current_angle;
     console.log("camera rotation: ", camera.rotation.z);
     // camera.lookAt(new THREE.Vector3(center.x,0,center.y));
     
@@ -52,7 +68,7 @@ function updateObjectId() {
     var box = getBoxById(boxId);
     box.object_id = input;
 
-    evaluator.increment_label_count();
+    // evaluator.increment_label_count();
 }
 
 
@@ -69,7 +85,11 @@ function selectRow(id) {
     $(row).find('select').get(0).focus();
 }
 
-
+// removes row of object id table given corrensponding bounding box id
+function deleteRow(id) {
+    var row = getRow(id);
+    row.remove();
+}
 
 // gets box given its id
 function getBoxById(id) {

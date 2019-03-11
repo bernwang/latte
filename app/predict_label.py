@@ -8,7 +8,7 @@ def predict_label(json_data, filename):
 	bounding_box_path = os.path.join("classify/bounding_boxes", filename+'.json')
 	bounding_box_filename = os.path.join(current_dir_path, bounding_box_path)
 	output_path = os.path.join(current_dir_path, "classify/write_data.txt")
-	image_filename = os.path.join("/Users/berniewang/annotator/lidarAnnotator/app/classify/data/image", filename+'png')
+	image_filename = os.path.join("/Users/berniewang/annotator/lidarAnnotator/app/classify/data/image", filename+'.png')
 	try:
 		open(bounding_box_filename, 'w').close()
 	except Exception as e:
@@ -27,7 +27,7 @@ def get_keyword(data):
 	van_keywords = {'van', 'minivan', 'bus', 'minibus'}
 	truck_keywords = {'truck'}
 	cyclist_keywords = {'cyclist', 'motorcyclist', 'unicyclist', 'bicycle', 'motocycle', 
-						'bike', 'motorbike'}
+						'bike', 'motorbike', 'unicycle', 'monocycle', 'rickshaw'}
 
 	words = []
 	for w in data.split(','):

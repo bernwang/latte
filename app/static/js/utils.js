@@ -41,6 +41,7 @@ function get3DCoord() {
     mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
     mouse.z = 0.5;
     mouse.unproject( camera );
+
     var dir = mouse.sub( camera.position ).normalize();
     var distance = - camera.position.y / dir.y;
     var pos = camera.position.clone().add( dir.multiplyScalar( distance ) );
@@ -121,6 +122,7 @@ function containsPoint(box, v) {
 
 
 function intersectWithCorner() {
+    var boundingBoxes = app.cur_frame.bounding_boxes;
     if (boundingBoxes.length == 0) {
         return null;
     }
@@ -215,17 +217,31 @@ function upload_file() {
 var fileLoaded = true;
 var currFile = "";
 function upload_files() {
-    var x = document.getElementById("file_input");
-    if (x.files.length > 0) {
-        for (var i = 0; i < x.files.length; i++) {
-            var filename = x.files[i].name;
-            var file = x.files[i];
-            evaluation.add_filename(filename);
+    $.ajax({
+        url: '/loadFrameNames',
+        type: 'POST',
+        contentType: 'application/json;charset=UTF-8',
+        success: function(response) {
+            app.fnames = response.split(',');
+            get_pointcloud_data(app.fnames[0]);
+        },
+        error: function(error) {
+            console.log(error);
         }
-        var text_reader = new FileReader();
-        load_data_helper(0, x.files);
-    }
+    });
+    // var x = document.getElementById("file_input");
+    // if (x.files.length > 0) {
+    //     for (var i = 0; i < x.files.length; i++) {
+    //         var filename = x.files[i].name;
+    //         var file = x.files[i];
+    //         evaluation.add_filename(filename);
+    //     }
+    //     var text_reader = new FileReader();
+    //     load_data_helper(0, x.files);
+    // }
 }
+
+
 
 function load_data_helper(index, files) {
     if (index < evaluation.filenames.length) {
@@ -259,7 +275,9 @@ function readData(text_reader) {
     if (evaluation.num_frames() == 1) { 
         reset();
         data = evaluation.get_data();
-        // getMaskRCNNLabels(evaluation.get_filename());
+        console.log("data from file: ", data)
+        console.log(evaluation.get_filename());
+        getMaskRCNNLabels(evaluation.get_filename());
         show();
         animate();
         // $.ajax({
