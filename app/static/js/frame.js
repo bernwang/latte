@@ -14,6 +14,7 @@ function Frame(fname, data) {
 				scene.add(box.points);
             	scene.add(box.boxHelper);
             	box.changeBoundingBoxColor(default_color);
+            	container.appendChild(box.text_label.element);
 			}
 	}
 
@@ -22,6 +23,7 @@ function Frame(fname, data) {
 			var box = this.bounding_boxes[i];
         	scene.add(box.boxHelper);
         	box.changeBoundingBoxColor(COLOR_WHITE);
+        	container.appendChild(box.text_label.element);
 		}
 	}
 
@@ -30,6 +32,7 @@ function Frame(fname, data) {
 				var box = this.bounding_boxes[i];
 				scene.remove(box.points);
             	scene.remove(box.boxHelper);
+            	box.text_label.element.remove();
 			}
 	}
 

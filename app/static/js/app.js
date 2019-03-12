@@ -23,6 +23,7 @@ function App() {
 	            	
 	            }
 	            this.set_frame(this.fnames[0]);
+	            focus_frame_row(getFrameRow(this.fnames[0]));
 	        },
 	        error: function(error) {
 	            console.log(error);
@@ -45,7 +46,8 @@ function App() {
 		} 
 		if (this.cur_frame) {
 			this.write_frame_out();
-			this.cur_frame.scene_remove_frame_children();		
+			this.cur_frame.scene_remove_frame_children();	
+			this.show_prev_frame = false;	
 		}
 		if (frame) {
 			show(frame);
@@ -79,23 +81,6 @@ function App() {
 	    
 	};
 
-	// this.get_all_pointcloud_data = function() {
-	//     $.ajax({
-	//     	context: this,
-	//         url: '/getAllPointClouds',
-	//         type: 'POST',
-	//         contentType: 'application/json;charset=UTF-8',
-	//         success: function(response) {
-	//         	var pointclouds_str = response.split('\n').map(x => x.split(','));
-	//             var pointclouds = pointclouds_str.map(x => x.map(y => parseFloat(y)));
-	//             console.log(pointclouds);
-	//             this.pointclouds = pointclouds;	            
-	//         },
-	//         error: function(error) {
-	//             console.log(error);
-	//         }
-	//     });
-	// };
 
 	this.getCursor = function() {
 		return get3DCoord();
@@ -164,12 +149,20 @@ function App() {
 		}
 	}
 
-	this.show_previous_frame_bounding_box = function() {
+	this.get_prev_frame = function() {
 		var cur_idx = this.fnames.indexOf(this.cur_frame.fname);
 		if (cur_idx == 0 || !(this.fnames[cur_idx - 1] in this.frames)) {
-			return;
+			return null;
 		}
 		var prev_frame = this.frames[this.fnames[cur_idx - 1]];
+		return prev_frame;
+	}
+
+	this.show_previous_frame_bounding_box = function() {
+		var prev_frame = this.get_prev_frame();
+		if (!prev_frame) {
+			return;
+		}
 		console.log("show prev frame: ", this.show_prev_frame);
 		if (!this.show_prev_frame) {
 			this.show_prev_frame = true;
@@ -199,6 +192,30 @@ function App() {
                 console.log(error);
             }
         });
+	}
+
+	this.render_text_labels = function() {
+		if (app.cur_frame) {
+	        for (var i = 0; i < app.cur_frame.bounding_boxes.length; i++) {
+	            var box = app.cur_frame.bounding_boxes[i];
+	            if (box.text_label) {
+	                box.text_label.updatePosition();
+	            }
+	        }
+
+	        if (app.show_prev_frame) {
+	        	var prev_frame = this.get_prev_frame();
+	        	if (!prev_frame) {
+	        		return;
+	        	}
+	            for (var i = 0; i < prev_frame.bounding_boxes.length; i++) {
+	                var box = prev_frame.bounding_boxes[i];
+	                if (box.text_label) {
+	                    box.text_label.updatePosition();
+	                }
+	            }
+	        }
+	    }
 	}
 }
 

@@ -3,6 +3,8 @@ OBJECT_TABLE = "#object-table"
 COLOR_RED =  new THREE.Color( 1,0,0 );
 COLOR_WHITE = new THREE.Color( 1,1,1 );
 DATA_STRIDE = 4;
+FRAME_ROW_FOCUS = "rgba(120, 120, 120, 1)";
+FRAME_ROW_NORMAL = "rgba(80, 80, 80, 0.7)";
 
 String.prototype.format = function() {
     var formatted = this;

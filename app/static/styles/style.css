@@ -73,9 +73,9 @@ nav a:hover {
     background-color:#1c1c1c;
     color:#FFF;
 }
-nav li + li {
+/*nav li + li {
     border-top:1px solid #444;
-}
+}*/
 #draw_bounding_box_reminder {
   font-size: 12px;
   position: fixed;
@@ -85,20 +85,63 @@ nav li + li {
     text-align: left;
 }
 
+#frames-table {
+  border-radius: 5px; 
+  background-color: rgba(60, 60, 60, 0.4);
+  padding: 0.5rem 0.5rem 0.5rem 0.5rem;
+}
+
+#frames-table div {
+  border-radius: 5px; 
+  background-color: rgba(80, 80, 80, 0.7);
+  padding: 0.5rem 0.5rem 0.5rem 0.5rem;
+  /*background-color: transparentize( white, 0.15 );*/
+}
+
+/* On mouse-over, add a deeper shadow */
+#frames-table div:hover {
+  cursor: pointer;
+  background-color: rgba(120, 120, 120, 1);
+}
+
+#frames-table div[selected] {
+  background-color: rgba(120, 120, 120, 1);
+}
+
+
+#object-table {
+  border-radius: 5px; 
+  background-color: rgba(60, 60, 60, 0.4);
+  padding: 0.5rem 0.5rem 0.5rem 0.5rem;
+}
+
+#object-table tbody .object_row {
+  border-radius: 5px; 
+  background-color: rgba(80, 80, 80, 0.7);
+  padding: 0.5rem 0.5rem 0.5rem 0.5rem;
+}
+
 
 #footer {
   font-size: 12px;
   position: fixed;
-    right: 10px;
-    bottom: 0;
-    width: 120px;
-    text-align: left;
+  right: 1rem;
+  bottom: 0;
+  width: 120px;
+  text-align: left;
 }
 
 #footer p {
   size: 50%;
 }
 
-.id:hover {
-  color: blue;
+#object-table .object_row_id:hover {
+ cursor: pointer;
+  background-color: rgba(120, 120, 120, 1);
 }
+
+#object-table .object_row_id[selected] {
+  cursor: pointer;
+  background-color: rgba(120, 120, 120, 1);
+}
+

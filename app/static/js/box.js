@@ -203,13 +203,9 @@ function Box(anchor, cursor, angle, boundingBox, boxHelper) {
 
     this.add_text_label = function() {
         var text = this.create_text_label();
-        text.setHTML("HIIIIIII");
+        text.setHTML(this.id.toString());
         text.setParent(this.boxHelper);
-        console.log(this.boxHelper)
-        // this.textlabels.push(text);
         container.appendChild(text.element);
-        console.log("added text");
-        console.log(text);
         this.text_label = text;
     }
 
@@ -224,8 +220,6 @@ function Box(anchor, cursor, angle, boundingBox, boxHelper) {
         div.style.left = -1000;
     
         var _this = this;
-
-        
     
         return {
           element: div,
@@ -238,12 +232,9 @@ function Box(anchor, cursor, angle, boundingBox, boxHelper) {
             this.parent = threejsobj;
           },
           updatePosition: function() {
-            console.log("uodatePosition1");
-            if(parent) {
+            if (parent) {
               this.position.copy(this.parent.position);
-            }
-            console.log("uodatePosition2");
-            
+            }            
             var coords2d = this.get2DCoords(this.position, camera);
             this.element.style.left = coords2d.x + 'px';
             this.element.style.top = coords2d.y + 'px';
@@ -252,18 +243,11 @@ function Box(anchor, cursor, angle, boundingBox, boxHelper) {
             var vector = position.project(camera);
             vector.x = (vector.x + 1)/2 * window.innerWidth;
             vector.y = -(vector.y - 1)/2 * window.innerHeight;
-            console.log("get2DCoords");
             return vector;
           }
         };
     }
 }
-    
-
-
-
-
-
 
 
 // gets angle between v1 and v2 with respect to origin
@@ -353,6 +337,7 @@ function addBox(box) {
     app.cur_frame.bounding_boxes.push(box);
     id++;
     addObjectRow(box);
+    box.add_text_label();
 }
 
 function stringifyBoundingBoxes(boundingBoxes) {
@@ -380,6 +365,7 @@ function deleteSelectedBox() {
     if (selectedBox) {
         scene.remove(selectedBox.points);
         scene.remove(selectedBox.boxHelper);
+        selectedBox.text_label.element.remove();
 
         // deletes corresponding row in object id table
         deleteRow(selectedBox.id);

@@ -1,6 +1,3 @@
-// TODO: Fix bug where there is a phantom box in the next frame when you delete a box
-//
-
 if ( ! Detector.webgl ) Detector.addGetWebGLMessage();
 
 var renderer, scene, camera, stats, raycaster, clock;
@@ -427,14 +424,7 @@ function render() {
     toggle += clock.getDelta();
     renderer.render( scene, camera );
 
-    if (app.cur_frame) {
-        for (var i = 0; i < app.cur_frame.bounding_boxes.length; i++) {
-            var box = app.cur_frame.bounding_boxes[i];
-            if (box.text_label) {
-                box.text_label.updatePosition();
-            }
-        }
-    }
+    app.render_text_labels();
 
     if (app.move2D) {
         grid.rotation.y = camera.rotation.z;
@@ -473,7 +463,9 @@ function update_footer(pos) {
     var x = pos.z;
     var y = pos.x;
 
-    $("#footer").find("p").text("x: " + x + "\ny: " + y);
+    $("#footer").find("p").html("x: {0}{1}y: {2}".format(x.toFixed(3), 
+                                                        "<br />", 
+                                                        y.toFixed(3)));
 }
 
 
