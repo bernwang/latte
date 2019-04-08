@@ -1,1 +1,1 @@
-tow truck, tow car, wrecker (score = 0.52438)
+cab, hack, taxi, taxicab (score = 0.34959)
