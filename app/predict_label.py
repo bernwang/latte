@@ -1,21 +1,22 @@
 import os
 
-
-
+CUR_DIR = os.path.dirname(os.path.realpath(__file__))
+PARENT_DIR = os.path.abspath(os.path.join(CUR_DIR, os.pardir))
+DATA_DIR = os.path.join(PARENT_DIR, "input")
+IMAGE_DIR = os.path.join(DATA_DIR, "image")
 
 def predict_label(json_data, filename):
-	current_dir_path = os.path.dirname(os.path.realpath(__file__))
 	bounding_box_path = os.path.join("classify/bounding_boxes", filename+'.json')
-	bounding_box_filename = os.path.join(current_dir_path, bounding_box_path)
-	output_path = os.path.join(current_dir_path, "classify/write_data.txt")
-	image_filename = os.path.join("/Users/berniewang/annotator/lidarAnnotator/app/classify/data/image", filename+'.png')
+	bounding_box_filename = os.path.join(CUR_DIR, bounding_box_path)
+	output_path = os.path.join(CUR_DIR, "classify/write_data.txt")
+	image_filename = os.path.join(IMAGE_DIR, filename+'.png')
 	try:
 		open(bounding_box_filename, 'w').close()
 	except Exception as e:
 		pass
 	with open(bounding_box_filename,'a') as f:
 		f.write(json_data)
-	os.system("python {} --image_file={}".format(os.path.join(current_dir_path, "classify/classifier.py"), image_filename))
+	os.system("python {} --image_file={}".format(os.path.join(CUR_DIR, "classify/classifier.py"), image_filename))
 	data = os.popen("cat {}".format(output_path)).read()
 	os.system("rm classify/bounding_boxes/*.json")
 	return get_keyword(data)

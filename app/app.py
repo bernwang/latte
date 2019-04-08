@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, jsonify
-from bounding_box import BoundingBox
+from models import BoundingBox
 from pointcloud import PointCloud
 from tracker import Tracker
 from predict_label import predict_label
@@ -54,13 +54,12 @@ def predictLabel():
 	os.system("rm {}/*".format(os.path.join(DIR_PATH, "static/images")))
 	predicted_label = predict_label(json_data, filename)
 	in_fov = os.path.exists(os.path.join(DIR_PATH, "static/images/cropped_image.jpg"))
-	print(os.path.join(DIR_PATH, "static/images/cropped_image.jpg"), in_fov, os.path.exists("/Users/berniewang/annotator/lidarAnnotator/app/static/images"))
 	return ",".join([str(predicted_label), str(in_fov)])
 
 
 @app.route("/getMaskRCNNLabels", methods=['POST'])
 def getMaskRCNNLabels():
-	filename = request.get_json()['filename'].split('.')[0]
+	filename = request.get_json()['fname']
 	print(filename)
 	return str(get_mask_rcnn_labels(filename))
 
@@ -82,13 +81,8 @@ def getFramePointCloud():
 	json_request = request.get_json()
 	fname = json_request["fname"]
 	data_str = fh.get_pointcloud(fname, dtype=str)
-	# pc = fh.get_pointcloud(fname, dtype=float)
-	# data = bp.ground_plane_fitting(pc)["png"]
-	# fh.bin_data_ground_removed[fname] = data
-	# data = np.hstack((data, np.zeros((len(data), 1))))
-	# data = data.flatten(order="C").tolist()
-	# data_str = (",").join([str(x) for x in data])
-	return data_str
+	annotation_str = str(fh.load_annotation(fname, dtype='json'))
+	return '?'.join([data_str, annotation_str])
 
 @app.route("/predictBoundingBox", methods=['POST'])
 def predictBoundingBox():
@@ -103,10 +97,31 @@ def predictBoundingBox():
 	print("num points without ground: {}".format(frame.shape))
 	return str(bp.predict_bounding_box(point, frame))
 
+@app.route("/predictNextFrameBoundingBoxes", methods=['POST'])
+def predictNextFrameBoundingBoxes():
+	json_request = request.get_json()
+	fname = json_request["fname"]
+	frame = fh.load_annotation(fname)
+	res = bp.predict_next_frame_bounding_boxes(frame)
+	keys = res.keys()
+	for key in keys:
+		res[str(key)] = res.pop(key)
+	print(res)
+
+	return str(res)
+
+@app.route("/loadAnnotation", methods=['POST'])
+def loadAnnotation():
+	json_request = request.get_json()
+	fname = json_request["fname"]
+	frame = fh.load_annotation(fname)
+	return str(frame.bounding_boxes)
+
+
 if __name__ == "__main__":
 	tracker = Tracker()
 	fh = FrameHandler()
-	bp = BoundingBoxPredictor()
+	bp = BoundingBoxPredictor(fh)
 	# pf = ParticleFilter(N=500)
 	os.system("rm {}/*".format(os.path.join(DIR_PATH, "static/images")))
 	app.run()

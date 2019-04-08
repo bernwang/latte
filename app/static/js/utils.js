@@ -229,16 +229,6 @@ function upload_files() {
             console.log(error);
         }
     });
-    // var x = document.getElementById("file_input");
-    // if (x.files.length > 0) {
-    //     for (var i = 0; i < x.files.length; i++) {
-    //         var filename = x.files[i].name;
-    //         var file = x.files[i];
-    //         evaluation.add_filename(filename);
-    //     }
-    //     var text_reader = new FileReader();
-    //     load_data_helper(0, x.files);
-    // }
 }
 
 
@@ -267,40 +257,6 @@ function load_text_file(index, text_file, files) {
     }
   }
 }
-
-function readData(text_reader) {
-    var rawLog = text_reader.result;
-    var floatarr = new Float32Array(rawLog)
-    evaluation.add_data(floatarr);
-    if (evaluation.num_frames() == 1) { 
-        reset();
-        data = evaluation.get_data();
-        console.log("data from file: ", data)
-        console.log(evaluation.get_filename());
-        getMaskRCNNLabels(evaluation.get_filename());
-        show();
-        animate();
-        // $.ajax({
-        //     url: '/initTracker',
-        //     data: JSON.stringify({pointcloud: pointcloud.geometry.vertices}),
-        //     type: 'POST',
-        //     contentType: 'application/json;charset=UTF-8',
-        //     success: function(response) {
-        //         console.log(response);
-        //     },
-        //     error: function(error) {
-        //         console.log(error);
-        //     }
-        // });
-        // evaluator.resume_3D_time();
-        // evaluator.resume_time();
-        $("#record").show();
-        isRecording = false;
-        $("#file_input").hide();
-        select2DMode();
-    }
-}
-
 
 
 // https://stackoverflow.com/a/15327425/4855984

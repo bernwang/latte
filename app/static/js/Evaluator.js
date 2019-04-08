@@ -1,4 +1,4 @@
-function Evaluator(angle, bounding_boxes, filename) {
+function Evaluator() {
 	this.add_box_count = 0;
 	this.resize_count = 0;
 	this.translate_count = 0;
@@ -8,9 +8,7 @@ function Evaluator(angle, bounding_boxes, filename) {
 	this.rotate_camera_count = 0;
 	this._3D_timer = new Timer();
 	this.timer = new Timer();
-	this.bounding_boxes = bounding_boxes;
-	this.filename = filename;
-	this.camera_angle = angle;
+	this.camera_angle = camera.rotation.z;
 
 	this.increment_add_box_count = function() {
 		this.add_box_count += 1;
@@ -105,13 +103,9 @@ function OutputEvaluator(eval) {
 	this.label_count = eval.label_count;
 	this.rotate_camera_count = eval.rotate_camera_count;
 	this.filename = eval.filename;
-	this.bounding_boxes = [];
 	this.time_elapsed = eval.get_time_elapsed();
 	this._3D_time_elapsed = eval.get_3D_time_elapsed();
 	
-	for (var i = 0; i < eval.bounding_boxes.length; i++) {
-		this.bounding_boxes.push(eval.bounding_boxes[i].output());
-	}
 	this.camera_angle = eval.camera_angle;
 }
 

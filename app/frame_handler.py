@@ -2,6 +2,7 @@ from os import listdir
 from os.path import isfile, join
 import json
 import numpy as np
+from models import Frame
 
 class FrameHandler():
 	INPUT_BIN_DIR = "input/bin_data"
@@ -40,18 +41,34 @@ class FrameHandler():
 		"""
 		filename = join(self.INPUT_BIN_DIR, fname.split(".")[0] + ".bin")
 		data = np.fromfile(filename, dtype=np.float32)
+		if ground_removed:
+			filename = join(self.GROUND_REMOVED_DIR, fname.split(".")[0] + ".bin")
+			data = np.fromfile(filename, dtype=np.float32)	
 		if dtype == str:
 			data = data.flatten(order="C").tolist()
 			data_str = (",").join([str(x) for x in data])
 			return data_str
 		else:
 			if ground_removed:
-				filename = join(self.GROUND_REMOVED_DIR, fname.split(".")[0] + ".bin")
-				data = np.fromfile(filename, dtype=np.float32)
 				return data.reshape((-1,4))
 			else:
 				return data.reshape((-1,4))[:,:3]
 
+	def load_annotation(self, fname, dtype='object'):
+		fname = fname.split('.')[0] + '.json'
+		try:
+			with open(join(self.OUTPUT_ANN_DIR, fname), "r") as read_file:
+				print("file: ", read_file)
+				try:
+					frame = json.load(read_file)
+					if dtype == 'object':
+						return Frame.parse_json(frame)
+					else:
+						return frame
+				except json.JSONDecodeError:
+					return ""
+		except:
+			return ""
 
 
 	def save_annotation(self, fname, json_str):

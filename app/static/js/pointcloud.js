@@ -8,7 +8,6 @@ function normalizeColors(vertices, color) {
     var stride = 4;
     // finds max and min z coordinates
     for ( var i = 0, l = vertices.length / DATA_STRIDE; i < l; i ++ ) {
-        
         if (vertices[ DATA_STRIDE * k + 2] > maxColor) {
             maxColor = vertices[ DATA_STRIDE * k + 2];
         }
@@ -51,12 +50,10 @@ function normalizeColors(vertices, color) {
 }
 
 function highlightPoints(indices) {
+    var pointcloud = app.cur_pointcloud;
     for (var j = 0; j < indices.length; j++) {
         pointcloud.geometry.colors[indices[j]] = new THREE.Color( 0,1,0 );
     }
-    // pointcloud.geometry.colors = colors;
-    console.log(indices.length);
-    // console.log(colors);
     pointcloud.geometry.colorsNeedUpdate = true;
 
 }
@@ -71,7 +68,7 @@ function generateNewPointCloud( vertices, color ) {
             vertices[ DATA_STRIDE * k + 2 ], vertices[ DATA_STRIDE * k ] );
 
         // stores y coordinates into yCoords
-        yCoords.push(vertices[ DATA_STRIDE * k + 2 ]);
+        // app.cur_frame.ys.push(vertices[ DATA_STRIDE * k + 2 ]);
         
         // add vertex to geometry
         geometry.vertices.push( v );
@@ -93,7 +90,6 @@ function generateNewPointCloud( vertices, color ) {
 }
 
 function updatePointCloud( vertices, color ) {
-    var colors = [];
     var k = 0;
     var n = vertices.length;
     var l = app.cur_pointcloud.geometry.vertices.length;
@@ -102,24 +98,24 @@ function updatePointCloud( vertices, color ) {
     for ( var i = 0; i < n / DATA_STRIDE; i ++ ) {
         if (i >= l) {
             v = new THREE.Vector3( vertices[ DATA_STRIDE * k + 1 ], 
-                vertices[ DATA_STRIDE * k + 2 ], vertices[ DATA_STRIDE * k ] );
+                app.cur_frame.ys[k], vertices[ DATA_STRIDE * k ] );
             geometry.vertices.push(v);
             geometry.colors.push(color.clone());
 
             // stores y coordinates into yCoords
-            yCoords.push(vertices[ DATA_STRIDE * k + 2 ]);
+            // app.cur_frame.ys.push(vertices[ DATA_STRIDE * k + 2 ]);
             geometry.verticesNeedUpdate = true;
             geometry.colorsNeedUpdate = true;
         } else {
             v = geometry.vertices[k];
             v.setX(vertices[ DATA_STRIDE * k + 1 ]);
-            v.setY(vertices[ DATA_STRIDE * k + 2 ]);
+            v.setY(app.cur_frame.ys[k]);
             v.setZ(vertices[ DATA_STRIDE * k ]);
             geometry.verticesNeedUpdate = true;
         }
         k++;
     }
-    normalizeColors(vertices, color);
+    normalizeColors(vertices, null);
     geometry.computeBoundingBox();
     return app.cur_pointcloud;
 

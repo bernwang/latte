@@ -7,7 +7,8 @@ function App() {
 	this.move2D = false;
 	this.eps = 0.00001;
 	this.show_prev_frame;
-
+	this.editing_box_id;
+	this.evaluators = [];
 
 	this.init = function() {
 		$.ajax({
@@ -31,6 +32,14 @@ function App() {
 	    });
 	};
 
+	this.get_prev_fname = function(fname) {
+		var idx = this.fnames.indexOf(fname);
+		if (idx == 0) {
+			return ""
+		}
+		return this.fnames[idx-1];
+	}
+
 	this.get_frame = function(fname) {
 		if (fname in this.frames) {
 			return this.frames[fname];
@@ -51,6 +60,7 @@ function App() {
 		}
 		if (frame) {
 			show(frame);
+			this.predict_next_frame_bounding_box(this.get_prev_fname(fname));
 		} else {
 			$.ajax({
 		    	context: this,
@@ -59,10 +69,82 @@ function App() {
 		        type: 'POST',
 		        contentType: 'application/json;charset=UTF-8',
 		        success: function(response) {
-		            var data = response.split(',').map(x => parseFloat(x));
+		        	var data, res, annotation, bounding_boxes_json, bounding_boxes, box;
+		        	res = response.split('?');
+		            data = res[0].split(',').map(x => parseFloat(x));
 		            var frame = new Frame(fname, data);
+
+		            if (res.length > 1 && res[1].length > 0)  {
+		        		annotation = parsePythonJSON(res[1]);
+		        		bounding_boxes_json = Object.values(annotation["frame"]["bounding_boxes"]);
+		        		bounding_boxes = Box.parseJSON(bounding_boxes_json);
+		        		for (var i = 0; i < bounding_boxes.length; i++) {
+		        			box = bounding_boxes[i];
+		        			frame.bounding_boxes.push(box);
+    						box.add_text_label();
+    						frame.annotated = true;
+		        		}
+		        	}
+
 			        this.frames[fname] = frame;
+
+			        this.get_Mask_RCNN_Labels(fname);
+					this.predict_next_frame_bounding_box(this.get_prev_fname(fname));
 					show(frame);
+		        },
+		        error: function(error) {
+		            console.log(error);
+		        }
+		    });
+		}
+	};
+
+	this.predict_next_frame_bounding_box = function(fname) {
+		var cur_idx = this.fnames.indexOf(fname);
+        console.log("cur idx: ", cur_idx);
+		if (cur_idx < 0 ||
+			cur_idx >= this.fnames.length - 1 ||
+			this.frames[this.fnames[cur_idx+1]].is_annotated() ||
+			!this.frames[this.fnames[cur_idx]] || 
+			!this.frames[this.fnames[cur_idx]].is_annotated()) {
+			// console.log("annotated: ", this.frames[fname].is_annotated());
+			return;
+		}
+
+		console.log("app.predict_next_frame_bounding_box, current fname: ", fname);
+
+		var next_frame = this.frames[this.fnames[cur_idx+1]];
+		console.log(next_frame.is_annotated);
+		
+		if (!next_frame.annotated) {
+			next_frame.annotated = true;
+			$.ajax({
+		    	context: this,
+		        url: '/predictNextFrameBoundingBoxes',
+		        data: JSON.stringify({fname: fname}),
+		        type: 'POST',
+		        contentType: 'application/json;charset=UTF-8',
+		        success: function(response) {
+		        	var res = response.split("\'").join("\"");
+		        	console.log(res);
+		        	res = JSON.parse(res);
+		        	console.log(res);
+					for (var box_id in res) {
+					    if (res.hasOwnProperty(box_id)) {
+					        console.log(res[box_id]);
+					        var json_box = res[box_id];
+					        var corner1 = new THREE.Vector3(json_box.corner1[1], 
+					        								this.eps, 
+					        								json_box.corner1[0]);
+				            var corner2 = new THREE.Vector3(json_box.corner2[1], 
+				            								0, 
+				            								json_box.corner2[0]);
+				            var box = createAndDrawBox(corner1, 
+			            					  corner2, 
+			            					  json_box['angle']);
+				            addBox(box);
+					    }
+					}
 		        },
 		        error: function(error) {
 		            console.log(error);
@@ -86,14 +168,10 @@ function App() {
 		return get3DCoord();
 	}
 
-	// app.handleBoxAdd();
- //    app.handleBoxResize();
- //    app.handleLabelPrediction();
-
-
 	this.handleBoxRotation = function() {
 		if (mouseDown && isRotating) {
 			rotatingBox.rotate(this.getCursor());
+			rotatingBox.add_timestamp();
 		}
 	}
 
@@ -104,6 +182,7 @@ function App() {
             // cursor's y coordinate nudged to make bounding box matrix invertible
             cursor.y -= this.eps;
             resizeBox.resize(cursor);
+            resizeBox.add_timestamp();
 		} else {
 			// evaluator.increment_resize_count();
             predictLabel(resizeBox);
@@ -115,6 +194,7 @@ function App() {
 		if (mouseDown && isMoving) {
     		selectedBox.translate(this.getCursor());
             selectedBox.changeBoundingBoxColor(selected_color.clone());
+            selectedBox.add_timestamp();
     	}
 	}
 
@@ -129,15 +209,12 @@ function App() {
 		        success: function(response) {
 		            console.log(response);
 		            var str = response.replace(/'/g, "\"");
-		            // str = str.replace("\"", "'");
-		            // str = str.replace(";", "\"");
-		            console.log(str);
 		            var res = JSON.parse(str);
 	
 		            var corner1 = new THREE.Vector3(res.corner1[1], this.eps, res.corner1[0]);
 		            var corner2 = new THREE.Vector3(res.corner2[1], 0, res.corner2[0]);
 		            console.log(corner1);
-		            var box = createBox(corner1, 
+		            var box = createAndDrawBox(corner1, 
 		            					corner2, 
 		            					res['angle']);
 		            addBox(box);
@@ -176,22 +253,26 @@ function App() {
 	}
 
 	this.write_frame_out = function() {
-		var output_frame = this.cur_frame.output();
-		var output = {"frame": output_frame};
-		var stringifiedOutput = JSON.stringify(output);
-		$.ajax({
-            url: '/writeOutput',
-            data: JSON.stringify({output: {filename: this.cur_frame.fname, 
-                                            file: stringifiedOutput}}),
-            type: 'POST',
-            contentType: 'application/json;charset=UTF-8',
-            success: function(response) {
-                console.log("successfully saved output")
-            },
-            error: function(error) {
-                console.log(error);
-            }
-        });
+		if (this.cur_frame) {
+			this.cur_frame.evaluator.pause_recording();
+			var output_frame = this.cur_frame.output();
+			console.log(output_frame);
+			var output = {"frame": output_frame};
+			var stringifiedOutput = JSON.stringify(output);
+			$.ajax({
+	            url: '/writeOutput',
+	            data: JSON.stringify({output: {filename: this.cur_frame.fname, 
+	                                            file: stringifiedOutput}}),
+	            type: 'POST',
+	            contentType: 'application/json;charset=UTF-8',
+	            success: function(response) {
+	                console.log("successfully saved output")
+	            },
+	            error: function(error) {
+	                console.log(error);
+	            }
+	        });
+		}
 	}
 
 	this.render_text_labels = function() {
@@ -217,10 +298,124 @@ function App() {
 	        }
 	    }
 	}
+
+	this.generate_new_box_id = function() {
+		if (app.cur_frame) {
+			var box_ids = [];
+			for (var i = 0; i < app.cur_frame.bounding_boxes.length; i++) {
+				box_ids.push(app.cur_frame.bounding_boxes[i].id);
+			}
+			if (box_ids.length > 0) {
+				return Math.max.apply(Math, box_ids) + 1;
+			}
+		}
+		return 0;
+	}
+
+	this.get_Mask_RCNN_Labels = function(fname) {
+    if (!enable_mask_rcnn) {return;}
+	    $.ajax({
+            url: '/getMaskRCNNLabels',
+            data: JSON.stringify({fname: fname}),
+            type: 'POST',
+            contentType: 'application/json;charset=UTF-8',
+            success: function(response) {
+                var l = response.length - 1;
+                maskRCNNIndices = response.substring(1, l).split(',').map(Number);
+                // console.log(maskRCNNIndices);
+                // console.log(response);
+                highlightPoints(maskRCNNIndices);
+                updateMaskRCNNImagePanel();
+            },
+            error: function(error) {
+                console.log(error);
+            }
+        });
+	}
+
+	this.pause_3D_time = function() {
+		if (this.cur_frame && isRecording) {
+			this.cur_frame.evaluator.pause_3D_time();
+		}
+	}
+	this.increment_label_count = function() {
+		if (this.cur_frame && isRecording) {
+			this.cur_frame.evaluator.increment_label_count();
+		}
+	}
+
+	this.decrement_label_count = function() {
+		if (this.cur_frame && isRecording) {
+			this.cur_frame.evaluator.decrement_label_count();
+		}
+	}
+
+	this.increment_add_box_count = function() {
+		if (this.cur_frame && isRecording) {
+			this.cur_frame.evaluator.increment_add_box_count();
+		}
+	}
+
+	this.increment_translate_count = function() {
+		if (this.cur_frame && isRecording) {
+			this.cur_frame.evaluator.increment_translate_count();
+		}
+	}
+
+	this.increment_rotate_count = function() {
+		if (this.cur_frame && isRecording) {
+			this.cur_frame.evaluator.increment_rotate_count();
+		}
+	}
+
+	this.increment_rotate_camera_count = function() {
+		if (this.cur_frame && isRecording) {
+			this.cur_frame.evaluator.increment_rotate_camera_count(camera.rotation.z);
+		}
+	}
+
+	this.increment_resize_count = function() {
+		if (this.cur_frame && isRecording) {
+			this.cur_frame.evaluator.increment_resize_count(camera.rotation.z);
+		}
+	}
+
+	this.increment_delete_count = function() {
+		if (this.cur_frame && isRecording) {
+			this.cur_frame.evaluator.increment_delete_count();
+		}
+	}
+
+	this.resume_3D_time = function() {
+		if (this.cur_frame && isRecording) {
+			this.cur_frame.evaluator.resume_3D_time();
+		}
+	}
+
+	this.pause_recording = function() {
+		if (this.cur_frame && isRecording) {
+			this.cur_frame.evaluator.pause_recording();
+		}
+	}
+
+	this.resume_recording = function() {
+		if (this.cur_frame && isRecording) {
+			this.cur_frame.evaluator.resume_recording();
+		}
+	}
+
+}
+
+function parsePythonJSON(json) {
+	return JSON.parse(json.split("\'").join("\""));
 }
 
 function show(frame) {
     var initPointCloud;
+
+    if (app.cur_frame) {
+    	clearObjectTable();
+    }
     app.cur_frame = frame;
     if (app.cur_pointcloud == null) {
     	initPointCloud = true;
@@ -233,4 +428,10 @@ function show(frame) {
     	animate();
     }
     app.cur_frame.scene_add_frame_children();
+    loadObjectTable();
+    switchMoveMode();
+
+    if (isRecording) {
+        toggleRecord(event);
+    }
 }

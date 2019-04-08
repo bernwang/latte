@@ -1,7 +1,6 @@
 if ( ! Detector.webgl ) Detector.addGetWebGLMessage();
 
 var renderer, scene, camera, stats, raycaster, clock;
-var pointcloud;
 var mouse2D = new THREE.Vector2();
 var intersection = null;
 var mouseDown;
@@ -28,22 +27,17 @@ var isRotating = false;
 var grid;
 var pointMaterial = new THREE.PointsMaterial( { size: pointSize * 8, sizeAttenuation: false, vertexColors: THREE.VertexColors } );
 
-var evaluator;
-var yCoords = [];
 var isRecording = true;
-var evaluators;
-var evaluation;
-var id = 0;
 var app;
-// animate();
-init();
 var mean, sd, filteredIntensities, min, max, intensities, colors;
 var selected_color = new THREE.Color(0x78F5FF);
 var hover_color = new THREE.Color(1, 0, 0);
 var default_color = new THREE.Color(0xffff00);
-var normalizedIntensities;
-var skipPredictions = true;
+var enable_predict_label = true;
+var enable_mask_rcnn = true;
 var autoDrawMode = false;
+
+init();
 
 
 // called first, populates scene and initializes renderer
@@ -79,14 +73,12 @@ function init() {
     //
     controls = new THREE.OrbitControls( camera, renderer.domElement );
 
-    evaluators = [];
-    evaluation = new Evaluation();
-
     window.addEventListener( 'resize', onWindowResize, false );
     document.getElementById('container').addEventListener( 'mousemove', onDocumentMouseMove, false );
     document.getElementById('container').addEventListener( 'mousedown', onDocumentMouseDown, false );
     document.getElementById('container').addEventListener( 'mouseup', onDocumentMouseUp, false );
     document.addEventListener( 'mousemove', updateMouse, false );
+    document.getElementById( 'save' ).addEventListener( 'click', write_frame_out, false );
     document.getElementById( 'move' ).addEventListener( 'click', moveMode, false );
     document.getElementById( 'move2D' ).addEventListener( 'click', move2DMode, false );
     document.addEventListener("keydown", onKeyDown2);  //or however you are calling your method
@@ -100,20 +92,23 @@ function init() {
     app.init();
 }
 
-function write_frame() {
-    evaluator.pause_recording();
-    evaluation.add_evaluator(evaluator);
-    evaluation.write_frame();
+function write_frame_out() {
+    app.write_frame_out();
 }
+// function write_frame() {
+//     evaluator.pause_recording();
+//     evaluation.add_evaluator(evaluator);
+//     evaluation.write_frame();
+// }
 
 function predictLabel(boundingBox) {
-    if (skipPredictions) {return;}
+    if (!enable_predict_label) {return;}
     if (boundingBox.hasPredictedLabel == false) {
         $.ajax({
             url: '/predictLabel',
-            data: JSON.stringify({frames: [{filename: evaluator.get_filename(), 
+            data: JSON.stringify({frames: [{filename: app.cur_frame.fname, 
                                             bounding_boxes: [stringifyBoundingBoxes([boundingBox])[0]] }],
-                                  filename: evaluator.get_filename()}),
+                                  filename: app.cur_frame.fname}),
             type: 'POST',
             contentType: 'application/json;charset=UTF-8',
             success: function(response) {
@@ -138,7 +133,7 @@ function predictLabel(boundingBox) {
 }
 
 function getMaskRCNNLabels(filename) {
-    if (skipPredictions) {return;}
+    if (!enable_mask_rcnn) {return;}
     $.ajax({
             url: '/getMaskRCNNLabels',
             data: JSON.stringify({filename: filename}),
@@ -147,8 +142,6 @@ function getMaskRCNNLabels(filename) {
             success: function(response) {
                 var l = response.length - 1;
                 maskRCNNIndices = response.substring(1, l).split(',').map(Number);
-                // console.log(maskRCNNIndices);
-                // console.log(response);
                 highlightPoints(maskRCNNIndices);
                 updateMaskRCNNImagePanel();
             },
@@ -158,61 +151,13 @@ function getMaskRCNNLabels(filename) {
         });
 }
 
-function next_frame(event) {
-    if (evaluation.is_done()) {
-        alert("You have completed the evaluation! Thank you for participating!");
-        write_frame();
-        console.log(evaluation.evaluators);
-        evaluation.write_output();
-        return;
-    } 
-    var response = confirm('Do you want to move on to the next frame? You cannot go back to edit previous frames.');
-    if (response == true) {
-        $("#next_frame").text("Next Frame (" + (evaluation.get_frame_number() + 1) + 
-                                "/" + evaluation.num_frames() + ")");
-        write_frame();
-        evaluation.next_frame();
-        reset();
-        app.data = evaluation.get_data();
-        show();
-        // $.ajax({
-        //     url: '/trackBoundingBoxes',
-        //     data: JSON.stringify({pointcloud: pointcloud.geometry.vertices,
-        //                           intensities: yCoords}),
-        //     type: 'POST',
-        //     contentType: 'application/json;charset=UTF-8',
-        //     success: function(response) {
-        //         console.log(JSON.parse(response));
-        //         var filtered_indices = JSON.parse(response)[0];
-        //         var nextBoundingBoxesData = JSON.parse(response)[1];
-        //         for (var i = 0; i < nextBoundingBoxesData.length; i++) {
-        //             var boundingBoxData = nextBoundingBoxesData[i];
-        //             var corners = boundingBoxData[0];
-        //             var theta = boundingBoxData[1];
-        //             anchor = new THREE.Vector3(corners[0][1], 0.000001, corners[0][0])
-        //             v = new THREE.Vector3(corners[1][1], -0.000001, corners[1][0])
-        //             newBox = createBox(anchor, v, theta);
-        //             addBox(newBox);
-        //         }
-        //     },
-        //     error: function(error) {
-        //         console.log(error);
-        //     }
-        // });
-        if (isRecording) {
-            toggleRecord(event);
-        }
-        select2DMode();
-    }
-} 
-
-
 function updateLabel(id, label) {
     var row = getRow(id);
     var dropDown = $(row).find("select");
     var selectedIndex = $(dropDown).prop("selectedIndex");
     $(dropDown).prop("selectedIndex", label);
-    evaluator.decrement_label_count();
+    // evaluator.decrement_label_count();
+    app.f
 }
 
 // gets 2D mouse coordinates
@@ -226,6 +171,9 @@ function updateMouse( event ) {
 // controller for resizing, rotating, translating, or hovering boxes and points
 function onDocumentMouseMove( event ) {
     event.preventDefault();
+    if (!isRecording) {
+        return;
+    }
     app.handleBoxRotation();
     app.handleBoxResize();
     app.handleBoxMove();
@@ -293,33 +241,28 @@ function onDocumentMouseUp( event ) {
     if (!isRecording) {
         return;
     }
-    // mouseDown = false;
-    // app.handleBoxAdd();
-    // app.handleBoxResize();
-    // app.handleLabelPrediction();
-    // app.
     if (isRecording) {
         app.handleAutoDraw();
         mouseDown = false;
         var predictBox = null;
         if (newBox != null && newBox.added) {
             addBox(newBox);
-            // evaluator.increment_add_box_count();
+            app.increment_add_box_count();
             predictBox = newBox;
         }
         newBox = null;
-        // if (isResizing) {
-        //     // evaluator.increment_resize_count();
-        //     predictLabel(resizeBox);
-        //     predictBox = resizeBox;
-        // }
+        if (isResizing) {
+            app.increment_resize_count();
+            predictLabel(resizeBox);
+            predictBox = resizeBox;
+        }
         if (isMoving && selectedBox) {
-            // evaluator.increment_translate_count();
+            app.increment_translate_count();
             predictLabel(selectedBox);
             predictBox = selectedBox;
         }
         if (isRotating) {
-            // evaluator.increment_rotate_count();
+            app.increment_rotate_count();
             predictBox = rotatingBox;
         }
         if (predictBox) {
@@ -334,7 +277,7 @@ function onDocumentMouseUp( event ) {
 
 
         // if (app.move2D) {
-        //     evaluator.increment_rotate_camera_count(camera.rotation.z);
+            app.increment_rotate_camera_count(camera.rotation.z);
         // }
     }
 }
@@ -346,10 +289,8 @@ function onDocumentMouseDown( event ) {
     if (isRecording) {
         if (!controls.enabled) {
             mouseDown = true;
-            console.log(mouseDown);
             anchor = get3DCoord();
             var intersection = intersectWithCorner();
-            // console.log("intersection: ", intersection);
             // update hover box
             if (selectedBox && (hoverBoxes.length == 0 || hoverBoxes[0] != selectedBox)) {
                 selectedBox.changeBoundingBoxColor(0xffff00);
@@ -478,9 +419,18 @@ function generatePointCloud() {
     }
 }
 
+
+function switchMoveMode() {
+    eventFire(document.getElementById('move'), 'click');
+}
+
+function switch2DMode() {
+    eventFire(document.getElementById('move2D'), 'click');
+}
+
 function moveMode( event ) {
     event.preventDefault();
-    assertRecordMode();
+    // assertRecordMode();
     if (isRecording) {
         controls.enabled = true;
         app.move2D = false;
@@ -491,52 +441,46 @@ function moveMode( event ) {
         unprojectFromXZ();
 
 
-        // evaluator.resume_3D_time();
+        app.resume_3D_time();
     }
 }
 
-function assertRecordMode() {
-    if (!isRecording) {
-        alert("Resume recording to change modes");
-    }
-}
-function select2DMode() {
-    console.log("draw");
-    document.getElementById( 'move' ).className = "";
-    document.getElementById( 'move2D' ).className = "selected";
-    camera.position.set(0, 100, 0);
-    camera.lookAt(new THREE.Vector3(0,0,0));
-    // camera.rotation.y = 0;
-    controls.maxPolarAngle = 0;
-    controls.minPolarAngle = 0;
-    camera.updateProjectionMatrix();
-    projectOntoXZ();
+// function assertRecordMode() {
+//     if (!isRecording) {
+//         alert("Resume recording to change modes");
+//     }
+// }
+// function select2DMode() {
+//     console.log("draw");
+//     document.getElementById( 'move' ).className = "";
+//     document.getElementById( 'move2D' ).className = "selected";
+//     camera.position.set(0, 100, 0);
+//     camera.lookAt(new THREE.Vector3(0,0,0));
+//     // camera.rotation.y = 0;
+//     controls.maxPolarAngle = 0;
+//     controls.minPolarAngle = 0;
+//     camera.updateProjectionMatrix();
+//     projectOntoXZ();
 
-    controls.reset();
-    controls.enabled = true;
-    controls.update();
-    app.move2D = true;
-}
+//     controls.reset();
+//     controls.enabled = true;
+//     controls.update();
+//     app.move2D = true;
+// }
 
 function move2DMode( event ) {
     event.preventDefault();
-    isRecording = true;
     if (isRecording) {
         document.getElementById( 'move' ).className = "";
         document.getElementById( 'move2D' ).className = "selected";
         if (!app.move2D) {
-            console.log("wassup");
-            // camera.position.set(0, 100, 0);
-            // camera.lookAt(new THREE.Vector3(0,0,0));
-            // camera.rotation.y = 0;
             controls.maxPolarAngle = 0;
             controls.minPolarAngle = 0;
             camera.updateProjectionMatrix();
             projectOntoXZ();
             // controls.reset();
 
-
-            // evaluator.pause_3D_time();
+            app.pause_3D_time();
         }
         controls.enabled = true;
         controls.update();
@@ -557,33 +501,20 @@ function projectOntoXZ() {
             v.y = 0;
         }
     }
-    console.log(count);
     app.cur_pointcloud.geometry.verticesNeedUpdate = true;
 }
 
 function unprojectFromXZ() {
-    for (var i = 0; i < app.cur_pointcloud.geometry.vertices.length; i++) {
-        var v = app.cur_pointcloud.geometry.vertices[i];
-        v.y = yCoords[i];
-    }
-    app.cur_pointcloud.geometry.verticesNeedUpdate = true;
+    if (app.cur_frame) {
+        console.log("unproject");
+        for (var i = 0; i < app.cur_pointcloud.geometry.vertices.length; i++) {
+            var v = app.cur_pointcloud.geometry.vertices[i];
+            v.y = app.cur_frame.ys[i];
+        }
+        app.cur_pointcloud.geometry.verticesNeedUpdate = true;
+    } 
 }
 
-// var maxSize = 2;
-// var SettingsControls = function() {
-//                        this.size = pointSize / maxSize;
-//                 };
-
-
-// var gui = new dat.GUI();
-// var settingsControls = new SettingsControls();
-// var settingsFolder = gui.addFolder('settings');
-// var size_slider = settingsFolder.add(settingsControls, 'size').min(0.0).max(1.0).step(0.05).onChange(function() {
-//     pointcloud.material.size = settingsControls.size * maxSize;
-//     pointMaterial.size = 4 * settingsControls.size * maxSize;
-// });
-
-// settingsFolder.open();
 
 function reset() {
     var boundingBoxes = app.cur_frame.bounding_boxes;
@@ -598,7 +529,6 @@ function reset() {
         yCoords = null;
         yCoords = [];
     }
-    evaluator = new Evaluator(camera.rotation.z, boundingBoxes, evaluation.get_filename());
 }
 
 

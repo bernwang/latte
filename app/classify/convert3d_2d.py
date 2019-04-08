@@ -18,24 +18,24 @@ import math
 from skimage import io
 import config
 
-current_dir_path = os.path.dirname(os.path.realpath(__file__))
-# print(current_dir_path)
-image_ab_path = current_dir_path+'/data/image/'
-bin_ab_path = current_dir_path+'/data/bin_data/'
-# print("image path: ", image_ab_path)
-# print("bin path: ", bin_ab_path)
+CUR_DIR = os.path.dirname(os.path.realpath(__file__))
+PARENT_DIR = os.path.abspath(os.path.join(CUR_DIR, os.pardir))
+
+IMAGE_OUTPUT_PATH = os.path.join(CUR_DIR, "inception")
+DATA_DIR = os.path.join(PARENT_DIR, "input")
+image_ab_path = os.path.join(DATA_DIR, "image")
+bin_ab_path = os.path.join(DATA_DIR, "bin_data")
+CALIBRATION_PATH = os.path.join(CUR_DIR, "calib")
 
 def rotation_matrix(theta):
     return np.array([[np.cos(theta), -np.sin(theta)], 
                      [np.sin(theta), np.cos(theta)]])
 
 def generate_2d_lidar():
-    # calib = Calib('/Users/berniewang/annotator/lidarAnnotator/app/classify/calib')
-    calib = Calib(config.CALIBRATION_PATH)
+    calib = Calib(CALIBRATION_PATH)
      # load image
     img_name = getCoord.getPictureName()
-    # print("image path again: ", os.path.join(image_ab_path+img_name))
-    im = Image.open(os.path.join(image_ab_path+img_name))
+    im = Image.open(os.path.join(image_ab_path, img_name)+'.png')
     w, h = im.size
     #im = np.array(im)
 
@@ -43,7 +43,7 @@ def generate_2d_lidar():
     bin_name = getCoord.getFileName()
     # print(bin_name)
     scan = np.fromfile(
-        os.path.join(bin_ab_path+bin_name),
+        os.path.join(bin_ab_path, bin_name)+'.bin',
         dtype=np.float32).astype(float).reshape((-1, 4))
     #im_coord0 = calib.velo2img(scan[:, :3], 2).astype(np.int)
 
@@ -79,10 +79,10 @@ def generate_2d_lidar():
         a_array = a_array.reshape((int(len(a_array)/4),4))
         
         print(a_array, len(a_array))
-        a_array.astype(np.float32).tofile(os.path.join(current_dir_path, "a.bin"))
+        a_array.astype(np.float32).tofile(os.path.join(CUR_DIR, "a.bin"))
 
         scan2 = np.fromfile(
-            os.path.join(current_dir_path, 'a.bin'),
+            os.path.join(CUR_DIR, 'a.bin'),
             dtype=np.float32).astype(float).reshape((-1, 4))
 
         im_coord = calib.velo2img(scan2[:, :3], 2).astype(np.int)
@@ -126,9 +126,9 @@ def generate_2d_lidar():
         box = (x_min, y_min,x_max, y_max)
         image1 = im.crop(box)#图像裁剪
         # image1.show()
-        image1.save("{}/{}.jpg".format(config.IMAGE_OUTPUT_PATH, i+1))
+        image1.save("{}/{}.jpg".format(IMAGE_OUTPUT_PATH, i+1))
         if not out_of_fov:
-            image_path.append("{}/{}.jpg".format(config.IMAGE_OUTPUT_PATH, i+1))
+            image_path.append("{}/{}.jpg".format(IMAGE_OUTPUT_PATH, i+1))
         else:
             image_path.append("")
         for i in range(len(im_coord)):

@@ -1,14 +1,15 @@
 import os
 
 import numpy as np
+import config
 
 root_dir = os.path.dirname(os.path.abspath(__file__))
+PARENT_DIR = os.path.abspath(os.path.join(root_dir, os.pardir))
+# INPUT_DIR = "/Users/berniewang/annotator/lidarAnnotator/app/input"
+# root_dir = config.INPUT_DIR
 print("root: ", root_dir)
 data_dir = os.path.join(root_dir, 'data')
 image_shape = 375, 1242
-
-# def get_drive_dir(drive, date='2011_09_26'):
-#     return os.path.join(data_dir, date, date + '_drive_%04d_sync' % drive)
 
 
 def get_inds(path, ext='.png'):
@@ -24,8 +25,6 @@ def read_calib_file(path):
 
     data = {}
 
-    # print(path)
-
     with open(path, 'r') as f:
         for line in f.readlines():
             key, value = line.split(':', 1)
@@ -37,8 +36,6 @@ def read_calib_file(path):
                     data[key] = np.array(list(map(float, value.split(' '))))
                 except ValueError:
                     pass  # casting error: data[key] already eq. value, so pass
-
-    # print(data)
 
     return data
 

@@ -9,7 +9,9 @@ import io
 import json
 import os
 import time
-path = '/Users/berniewang/annotator/lidarAnnotator/app/classify/bounding_boxes/'
+
+CUR_DIR = os.path.dirname(os.path.realpath(__file__))
+path = os.path.join(CUR_DIR, 'bounding_boxes/')
 dirs = os.listdir(path)
 
 def getCurrentDirs():

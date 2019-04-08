@@ -16,45 +16,24 @@ settingsFolder.add(settingsControls, 'size').min(0.0).max(1.0).step(0.05).onChan
 
 settingsFolder.open();
 
-function next_frame(event) {
-    if (evaluation.is_done()) {
-        alert("You have completed the evaluation! Thank you for participating!");
-        evaluation.add_evaluator(evaluator);
-        evaluation.write_output();
-        return;
-    } 
-    var response = confirm('Do you want to move on to the next frame? You cannot go back to edit previous frames.');
-
-    if (response == true) {
-        $("#next_frame").text("Next Frame (" + (evaluation.get_frame_number() + 1) + 
-                                "/" + evaluation.num_frames() + ")");
-        evaluation.add_evaluator(evaluator);
-        evaluation.next_frame();
-        reset();
-        data = evaluation.get_data();
-        show();
-        animate();
-
-        if (isRecording) {
-            toggleRecord(event);
-        }
-        select2DMode();
-    }
-} 
-
-function toggleRecord(event) {
+function toggleRecord() {
     // pause recording
     if (isRecording) {
         $("#record").text("Click to resume recording");
-        evaluator.pause_recording();
-        move2DMode(event);
+        app.pause_recording();
+        // move2DMode(event);
         isRecording = false;
+        controls.enabled = false;
+        controls.update();
         
     } else {
         // resume recording
         isRecording = true;
         $("#record").text("Click to pause recording");
-        evaluator.resume_recording();
+        app.resume_recording();
+
+        controls.enabled = true;
+        controls.update();
     }
 }
 // controller for pressing hotkeys
@@ -140,23 +119,6 @@ function updateCroppedImagePanel(child) {
         $("#panel2").slideDown( "slow" );
     }
     
-}
-
-
-function toggleRecord(event) {
-    // pause recording
-    if (isRecording) {
-        $("#record").text("Click to resume recording");
-        evaluator.pause_recording();
-        move2DMode(event);
-        isRecording = false;
-        
-    } else {
-        // resume recording
-        isRecording = true;
-        $("#record").text("Click to pause recording");
-        evaluator.resume_recording();
-    }
 }
 
 // controller for pressing hotkeys

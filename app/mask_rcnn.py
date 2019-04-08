@@ -12,5 +12,7 @@ def get_mask_rcnn_labels(filename):
 					    os.path.join(ROOT_DIR, "Mask_RCNN_2/output/indices.bin"),
 					    dtype=np.int)
 	os.system("rm {}/Mask_RCNN_2/output/*.bin".format(ROOT_DIR))
+
+	print(bounded_indices)
 	return bounded_indices.tolist()
 	# os.system("rm classify/bounding_boxes/*.json")

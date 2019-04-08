@@ -35,7 +35,8 @@ def main(data_filename):
     MODEL_DIR = os.path.join(ROOT_DIR, "logs")
 
     # Directory to get binary and image data
-    DATA_DIR = os.path.join("/".join(ROOT_DIR.split("/")[:-1]), "classify/data")
+    PARENT_DIR = os.path.abspath(os.path.join(ROOT_DIR, os.pardir))
+    DATA_DIR = os.path.join(PARENT_DIR, "input")
 
     # Local path to trained weights file
     COCO_MODEL_PATH =  os.path.join(ROOT_DIR, "mask_rcnn_coco.h5")

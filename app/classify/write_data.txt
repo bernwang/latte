@@ -1,1 +1,1 @@
-minibus (score = 0.76935)
+tow truck, tow car, wrecker (score = 0.52438)
