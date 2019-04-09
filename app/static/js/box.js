@@ -13,7 +13,7 @@ function Box(anchor, cursor, angle, boundingBox, boxHelper) {
     // visualizes the corners (in the non-rotated coordinates) of the box
     this.points = new THREE.Points( this.geometry, pointMaterial );
     this.points.frustumCulled = false; // allows 
-    this.timestamps = [Date.now()];
+    this.timestamps = [];
     
     this.colors = []; // colors of the corner points
 
@@ -453,4 +453,5 @@ function OutputBox(box) {
     this.length = distance2D(v1, v3);
     this.angle = box.angle;
     this.object_id = box.object_id;
+    this.timestamps = box.timestamps;
 }

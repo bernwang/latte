@@ -102,14 +102,6 @@ $(OBJECT_TABLE).on('mousedown', '.object_row_id', function(e) {
     }
     });
 
-$(OBJECT_TABLE).on('keypress', function(e) {
-    if(e.which == 13) {
-        // alert($(this).find("[input]").val());
-
-    }
-});
-
-
 
 // handler that saves input when input is changed
 $("#object-table").on('change', 'tbody tr', updateObjectId);
@@ -134,8 +126,8 @@ function updateObjectId() {
         console.log("not input", boxId);
     }
     console.log(boxId);
-    // box = getBoxById(boxId);
-    box = selectedBox;
+    box = getBoxById(boxId);
+    // box = selectedBox;
     // console.log(box, selectedBox);
     if (box) {
         input = $(this).find('select').val();
@@ -144,6 +136,7 @@ function updateObjectId() {
         box.set_box_id(parseInt(boxId))
         // box.id = ;
         console.log(box);
+        box.add_timestamp();
     }
     
     app.increment_label_count();

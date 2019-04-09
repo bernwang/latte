@@ -247,6 +247,7 @@ function onDocumentMouseUp( event ) {
         var predictBox = null;
         if (newBox != null && newBox.added) {
             addBox(newBox);
+            newBox.add_timestamp();
             app.increment_add_box_count();
             predictBox = newBox;
         }

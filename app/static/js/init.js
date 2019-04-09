@@ -6,6 +6,14 @@ DATA_STRIDE = 4;
 FRAME_ROW_FOCUS = "rgba(120, 120, 120, 1)";
 FRAME_ROW_NORMAL = "rgba(80, 80, 80, 0.7)";
 
+/* Variables to toggle */
+var enable_predict_label = true;
+var enable_mask_rcnn = false;
+var enable_one_click_annotation = true;
+var enable_bounding_box_tracking = true;
+
+
+
 String.prototype.format = function() {
     var formatted = this;
     for (var i = 0; i < arguments.length; i++) {

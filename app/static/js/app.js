@@ -100,6 +100,9 @@ function App() {
 	};
 
 	this.predict_next_frame_bounding_box = function(fname) {
+		if (!enable_bounding_box_tracking) {
+			return;
+		}
 		var cur_idx = this.fnames.indexOf(fname);
         console.log("cur idx: ", cur_idx);
 		if (cur_idx < 0 ||
@@ -199,7 +202,7 @@ function App() {
 	}
 
 	this.handleAutoDraw = function() {
-		if (autoDrawMode) {
+		if (autoDrawMode && enable_one_click_annotation) {
 			$.ajax({
 				context: this,
 		        url: '/predictBoundingBox',

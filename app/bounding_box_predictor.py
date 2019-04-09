@@ -71,8 +71,8 @@ class BoundingBoxPredictor():
         next_pc[:,2] = 0
         next_pc = next_pc[:,:3]
         np.random.shuffle(next_pc)
-        next_pc_small = next_pc[::2]
-        next_bounding_boxes = {str(bounding_box.box_id):self._predict_next_frame_bounding_box(bounding_box, next_pc) 
+        next_pc_small = next_pc[::4]
+        next_bounding_boxes = {str(bounding_box.box_id):self._predict_next_frame_bounding_box(bounding_box, next_pc_small) 
                                 for bounding_box in bounding_boxes}
         return next_bounding_boxes
 
