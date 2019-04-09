@@ -5,13 +5,16 @@ LiDAR annotation tool using ray tracing and bounding boxes.
 Demo Video: [https://www.youtube.com/watch?v=QWjWpqvYA_c](https://www.youtube.com/watch?v=QWjWpqvYA_c&feature=youtu.be)
 
 # For people using the annotator for the efficiency test
-1. There are 10 frames (.bin files) in /test/velodyne_points/data. 
-2. You can load multiple frames at once. Frames take between 2-8 minutes to annonate based now how many objects are in the scene. You should load a few frames at a time (~3-5), and doing them in batches, in the case of lost data. Data is exported only after all selected frames are annotated. Please note that if the page is refreshed or if the window is closed, all progress is lost. 
-3. There is a record button so that you can pause the test if you want. Note that if you pause the test, you will be forced into "2D mode" and cannot draw boxes. Click on the button again to resume recording. Recording will be automatically paused when you move onto a new fram. 
-4. To move onto the next frame, click "Next frame". You cannot go back to a previous frame.
-5. Please look at the "controls" section to understand how to draw/edit bounding boxes. Read "my strategy for annotating" for a quickstart on annotating. In my opinion, this is the most efficient way to annotate with this current version for people who are new. 
-6. After all frames in the batch are annotated, a JSON file will be exported. You can choose to name it whatever you want, as only the data stored is important. It is okay if the annotations are in several JSON files as annotating in batches is recommended. 
-7. Thank you for participating in the efficiency test! Your time and effort goes into making the LiDAR annotater better!
+1. Batches of frames are found in `app/test_datasets`
+2. Copy one of the folders in directory to `app` (it should look like `app/<number>_drive_<number>_sync`) and rename it to input (`app/input`)
+3. To run the tool, run `python app.py` in wherever you have your `app` directory is
+4. Open http://127.0.0.1:5000/ on a browser (preferably Chrome, but definitely not FireFox)
+<Steps below are not updated yet>
+5. There is a record button so that you can pause the test if you want. Note that if you pause the test, you will be forced into "2D mode" and cannot draw boxes. Click on the button again to resume recording. Recording will be automatically paused when you move onto a new fram. 
+6. To move onto the next frame, click "Next frame". You cannot go back to a previous frame.
+7. Please look at the "controls" section to understand how to draw/edit bounding boxes. Read "my strategy for annotating" for a quickstart on annotating. In my opinion, this is the most efficient way to annotate with this current version for people who are new. 
+8. After all frames in the batch are annotated, a JSON file will be exported. You can choose to name it whatever you want, as only the data stored is important. It is okay if the annotations are in several JSON files as annotating in batches is recommended. 
+9. Thank you for participating in the efficiency test! Your time and effort goes into making the LiDAR annotater better!
 
 
 # My strategy for annotating
