@@ -7,7 +7,8 @@ Demo Video: [https://www.youtube.com/watch?v=QWjWpqvYA_c](https://www.youtube.co
 ## Installation
 1. Clone this repository
 2. Checkout the evaluation branch
-   ```git checkout evaluation`
+   ```bash
+   git checkout evaluation`
    ```
 2. Install dependencies
    ```bash
@@ -28,8 +29,9 @@ Demo Video: [https://www.youtube.com/watch?v=QWjWpqvYA_c](https://www.youtube.co
 
 
 # Drawing bounding boxes
-Bounding boxes can be drawn by holding the control key and clicking and dragging. When drawing bounding boxes, please view in 2D mode: 
+Bounding boxes can be drawn by holding the control key and clicking and dragging. When drawing bounding boxes, please view in 2D mode (rightmost button): 
 ![Alt Text](https://github.com/bernwang/LiDAR-annotator/blob/evaluation/images/different_modes.png)
+
 The control key must held down for all bounding box operations. The follow features are supported:
 1. Resizing
 # My strategy for annotating
