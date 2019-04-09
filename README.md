@@ -19,7 +19,6 @@ Demo Video: [https://www.youtube.com/watch?v=QWjWpqvYA_c](https://www.youtube.co
 # For people using the annotator for the efficiency test
 1. Batches of frames are found in `app/test_datasets`
 2. Copy one of the folders in directory to `app` (it should look like `app/<number>_drive_<number>_sync`) and rename it to input (`app/input`). Make sure `app/output` directory is empty. 
-<Steps below are not updated yet>
 3. There is a record button so that you can pause the test if you want. This will disable most functionality of the tool. Please pause if you want to take a break, but it is suggested to take breaks between batches. Click on the button again to resume recording. Recording will be automatically paused when you move onto a new frame. 
 4. To move onto the next frame, click "Next frame". Annotation will automatically save when you switch frames. There is a save button on the top left. The last frame does not automatically save so please use that save button instead. 
 5. Please look at the "controls" section to understand how to draw/edit bounding boxes. Read "my strategy for annotating" for a quickstart on annotating. In my opinion, this is the most efficient way to annotate with this current version for people who are new. 
