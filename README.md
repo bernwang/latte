@@ -6,6 +6,9 @@ Demo Video: [https://www.youtube.com/watch?v=QWjWpqvYA_c](https://www.youtube.co
 
 ## Installation
 1. Clone this repository
+2. Checkout the evaluation branch
+   ```git checkout evaluation`
+   ```
 2. Install dependencies
    ```bash
    pip3 install -r requirements.txt
@@ -13,18 +16,21 @@ Demo Video: [https://www.youtube.com/watch?v=QWjWpqvYA_c](https://www.youtube.co
 3. To run the tool, run `python app.py` in wherever you have your `app` directory is
 4. Open http://127.0.0.1:5000/ on a browser (preferably Chrome, but definitely not FireFox)
 
-# For people using the annotator for the efficiency test
+# For people using the annotator for the efficiency test, read this first
 1. Batches of frames are found in `app/test_datasets`
-2. Copy one of the folders in directory to `app` (it should look like `app/<number>_drive_<number>_sync`) and rename it to input (`app/input`)
+2. Copy one of the folders in directory to `app` (it should look like `app/<number>_drive_<number>_sync`) and rename it to input (`app/input`). Make sure `app/output` directory is empty. 
+3. There is a record button so that you can pause the test if you want. This will disable most functionality of the tool. Please pause if you want to take a break, but it is suggested to take breaks between batches. Click on the button again to resume recording. Recording will be automatically paused when you move onto a new frame. 
+4. To move onto the next frame, click "Next frame". Annotation will automatically save when you switch frames. There is a save button on the top left. The last frame does not automatically save so please use that save button instead. 
+5. Please look at the "controls" section to understand how to draw/edit bounding boxes. Read "my strategy for annotating" for a quickstart on annotating. In my opinion, this is the most efficient way to annotate with this current version for people who are new. 
+6. After all frames in the batch are annotated, please move them (in `app/output`) to `app/test_outputs/<drive_name>` where `drive_name` is the name of the input directory.
+7. When you're ready to annotate the next batch, repeat steps 1 to 6.
+8. Thank you for participating in the efficiency test! Your time and effort goes into making the LiDAR annotater better!
 
-<Steps below are not updated yet>
-5. There is a record button so that you can pause the test if you want. Note that if you pause the test, you will be forced into "2D mode" and cannot draw boxes. Click on the button again to resume recording. Recording will be automatically paused when you move onto a new fram. 
-6. To move onto the next frame, click "Next frame". You cannot go back to a previous frame.
-7. Please look at the "controls" section to understand how to draw/edit bounding boxes. Read "my strategy for annotating" for a quickstart on annotating. In my opinion, this is the most efficient way to annotate with this current version for people who are new. 
-8. After all frames in the batch are annotated, a JSON file will be exported. You can choose to name it whatever you want, as only the data stored is important. It is okay if the annotations are in several JSON files as annotating in batches is recommended. 
-9. Thank you for participating in the efficiency test! Your time and effort goes into making the LiDAR annotater better!
 
-
+# Drawing bounding boxes
+Bounding boxes can be drawn by holding the control key and clicking and dragging. When drawing bounding boxes, please view in 2D mode: 
+The control key must held down for all bounding box operations. The follow features are supported:
+1. Resizing
 # My strategy for annotating
 1. Go into "draw" mode. Draw bounding boxes for all objects of interest (i.e. vehicles, pedestrians, cyclists). 
 2. Then, in "3D mode", for each row in the Object ID table, click on the object number, and its corresponding bounding box will turn blue. Then adjust the object id (car, van, truck, etc.) to what you think that object is. If the object is not an object of interest, just hit the delete or backspace key to delete the bounding box. 
