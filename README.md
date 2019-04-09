@@ -29,7 +29,7 @@ Demo Video: [https://www.youtube.com/watch?v=QWjWpqvYA_c](https://www.youtube.co
 
 # Drawing bounding boxes
 Bounding boxes can be drawn by holding the control key and clicking and dragging. When drawing bounding boxes, please view in 2D mode: 
-![Alt Text](https://github.com/bernwang/LiDAR-annotator/blob/evaluation/images/Screen Shot 2019-04-09 at 4.20.40 PM.png)
+![Alt Text](https://github.com/bernwang/LiDAR-annotator/blob/evaluation/images/different_modes.png)
 The control key must held down for all bounding box operations. The follow features are supported:
 1. Resizing
 # My strategy for annotating
