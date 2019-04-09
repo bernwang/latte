@@ -42,6 +42,9 @@ The control key must held down for all bounding box operations. The follow featu
 1. When your cursor is inside the box and the box color changes to red, you can drag it around. 
 
 ## Rotation
+
+![Alt Text](https://github.com/bernwang/LiDAR-annotator/blob/evaluation/images/bounding_box.png)
+
 1. To rotate bounding box, click and drag the point that is not a corner vertex (it should be between two corner vertices) and box will rotate with the point. 
 
 ## Deletion
