@@ -4,11 +4,19 @@ LiDAR annotation tool using ray tracing and bounding boxes.
 ![Alt Text](https://github.com/bernwang/LiDAR-annotator/blob/evaluation/gifs/step1.gif)
 Demo Video: [https://www.youtube.com/watch?v=QWjWpqvYA_c](https://www.youtube.com/watch?v=QWjWpqvYA_c&feature=youtu.be)
 
+## Installation
+1. Clone this repository
+2. Install dependencies
+   ```bash
+   pip3 install -r requirements.txt
+   ```
+3. To run the tool, run `python app.py` in wherever you have your `app` directory is
+4. Open http://127.0.0.1:5000/ on a browser (preferably Chrome, but definitely not FireFox)
+
 # For people using the annotator for the efficiency test
 1. Batches of frames are found in `app/test_datasets`
 2. Copy one of the folders in directory to `app` (it should look like `app/<number>_drive_<number>_sync`) and rename it to input (`app/input`)
-3. To run the tool, run `python app.py` in wherever you have your `app` directory is
-4. Open http://127.0.0.1:5000/ on a browser (preferably Chrome, but definitely not FireFox)
+
 <Steps below are not updated yet>
 5. There is a record button so that you can pause the test if you want. Note that if you pause the test, you will be forced into "2D mode" and cannot draw boxes. Click on the button again to resume recording. Recording will be automatically paused when you move onto a new fram. 
 6. To move onto the next frame, click "Next frame". You cannot go back to a previous frame.
