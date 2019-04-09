@@ -30,30 +30,39 @@ Demo Video: [https://www.youtube.com/watch?v=QWjWpqvYA_c](https://www.youtube.co
 
 # Drawing bounding boxes
 Bounding boxes can be drawn by holding the control key and clicking and dragging. When drawing bounding boxes, please view in 2D mode (rightmost button): 
+
 ![Alt Text](https://github.com/bernwang/LiDAR-annotator/blob/evaluation/images/different_modes.png)
 
 The control key must held down for all bounding box operations. The follow features are supported:
-1. Resizing
+## Resizing
+1. To resize bounding box, click and drag the "corner" vertices
+2. You can only click and drag on a corner vertex if it is blue. It will turn blue if your mouse is close enough to it. 
+
+## Translation
+1. When your cursor is inside the box and the box color changes to red, you can drag it around. 
+
+## Rotation
+1. To rotate bounding box, click and drag the point that is not a corner vertex (it should be between two corner vertices) and box will rotate with the point. 
+
+## Deletion
+1. To delete bounding box, press the backspace/delete key while the bounding box is selected. 
+
+
+<!---
 # My strategy for annotating
 1. Go into "draw" mode. Draw bounding boxes for all objects of interest (i.e. vehicles, pedestrians, cyclists). 
 2. Then, in "3D mode", for each row in the Object ID table, click on the object number, and its corresponding bounding box will turn blue. Then adjust the object id (car, van, truck, etc.) to what you think that object is. If the object is not an object of interest, just hit the delete or backspace key to delete the bounding box. 
 ![Alt Text](https://github.com/bernwang/LiDAR-annotator/blob/evaluation/gifs/step2.gif)
 3. If you miss any object of interest, go back to "draw" mode to draw a bounding box for it.
 4. Repeat (1) through (3) until you think that all objects of interest are covered.
-
-# Usage
-1. Clone the repository
-2. To launch the app, just open index.html on your browser.
-3. Load LiDAR data (see LiDAR format). 
-4. To draw a bounding box, simply hold your mouse down and drag across the screen. See "Controls" section to learn more about user interface. 
-5. To *export* your bounding boxes, click on the "save" button to the top-left.
-
+--->
 # Controls
 ## "3D" mode
 1. Left click and drag to orbit around the point cloud
 2. Right click and drag to translate.
 3. You can label objects in "3D" mode (see "labelling bounding boxes")
 
+<!---
 ## "2D/Draw" mode
 (Note: While in "2D move" mode, hold the control key to be in "draw mode")
 1. Click and drag to draw a bounding box and release to set it
@@ -63,6 +72,7 @@ The control key must held down for all bounding box operations. The follow featu
 4. To "select" bounding box, first hover above it. You can tell it is hovered if it turns red. Then click somewhere strictly inside a bounding box, and the borders will turn blue. 
 5. To delete bounding box, press the backspace/delete key while the bounding box is selected. 
 6. When a bounding box is selected, the input for its corresponding row in the object ID table is focused. (see "labelling bounding boxes")
+--->
 
 ## Labelling Bounding Boxes
 1. Click on the index of a bounding box in the "object id table" and its corresponding bounding box will change color to blue.
