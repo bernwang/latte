@@ -1,14 +1,15 @@
 from os import listdir
-from os.path import isfile, join
+from os.path import isfile, join, dirname, realpath
 import json
 import numpy as np
 from models import Frame
 
 class FrameHandler():
-	INPUT_BIN_DIR = "input/bin_data"
-	GROUND_REMOVED_DIR = "input/ground_removed"
-	OUTPUT_ANN_DIR = "output"
-	INPUT_IMAGE_DIR = "input/image"
+	CUR_DIR =dirname(realpath(__file__))
+	INPUT_BIN_DIR = join(CUR_DIR, "input/bin_data")
+	GROUND_REMOVED_DIR = join(CUR_DIR, "input/ground_removed")
+	OUTPUT_ANN_DIR = join(CUR_DIR, "output")
+	INPUT_IMAGE_DIR = join(CUR_DIR, "input/image")
 
 	def __init__(self):
 		self.bin_data  = sorted([f for f in listdir(self.INPUT_BIN_DIR) 

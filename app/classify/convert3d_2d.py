@@ -142,7 +142,8 @@ def generate_2d_lidar():
         # plt.show()
         if not out_of_fov:
             DIR_PATH = os.path.dirname(os.path.realpath(__file__))
-            io.imsave(os.path.join(DIR_PATH, "../static/images/cropped_image.jpg"), image1)
+            print(type(image1))
+            io.imsave(os.path.join(DIR_PATH, "../static/images/cropped_image.jpg"), np.array(image1))
 
     return image_path
 
