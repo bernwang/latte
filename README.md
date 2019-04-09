@@ -47,6 +47,12 @@ The control key must held down for all bounding box operations. The follow featu
 ## Deletion
 1. To delete bounding box, press the backspace/delete key while the bounding box is selected. 
 
+## One-click bounding box drawing
+1. Instead of holding the control key, hold the `a` key. Then click a point in the cluster and the tool will draw a bounding box. 
+2. You can adjust the auto-drawn bounding box afterwards
+
+## Frame-by-frame tracking
+1. After annotating a frame, the next frame can be auto-annotated. 
 
 <!---
 # My strategy for annotating
