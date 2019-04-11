@@ -8,15 +8,16 @@ Created on Mon Jul 30 17:23:50 2018
 import os
 
 import numpy as np
-from PIL import Image
-
 import matplotlib.pyplot as plt
 
 from calib import Calib
 import getCoord as getCoord
 import math
+import skimage
 from skimage import io
 import config
+from PIL import Image
+
 
 CUR_DIR = os.path.dirname(os.path.realpath(__file__))
 PARENT_DIR = os.path.abspath(os.path.join(CUR_DIR, os.pardir))

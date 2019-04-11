@@ -85,8 +85,6 @@ function generateNewPointCloud( vertices, color ) {
     app.cur_pointcloud = pointcloud;
     normalizeColors(vertices, color);
     return pointcloud;
-    
-
 }
 
 function updatePointCloud( vertices, color ) {
@@ -117,6 +115,11 @@ function updatePointCloud( vertices, color ) {
     }
     normalizeColors(vertices, null);
     geometry.computeBoundingBox();
+    console.log("fii");
+    if (app.cur_frame != null && app.cur_frame.mask_rcnn_indices.length > 0) {
+        highlightPoints(app.cur_frame.mask_rcnn_indices);
+    }
+
     return app.cur_pointcloud;
 
 }

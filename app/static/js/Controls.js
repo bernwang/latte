@@ -19,7 +19,7 @@ settingsFolder.open();
 function toggleRecord() {
     // pause recording
     if (isRecording) {
-        $("#record").text("Click to resume recording");
+        $("#record").text("Click here to resume recording");
         app.pause_recording();
         // move2DMode(event);
         isRecording = false;
@@ -29,7 +29,7 @@ function toggleRecord() {
     } else {
         // resume recording
         isRecording = true;
-        $("#record").text("Click to pause recording");
+        $("#record").text("Click here to pause recording");
         app.resume_recording();
 
         controls.enabled = true;

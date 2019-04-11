@@ -23,7 +23,6 @@ def init_tracker():
 	json_request = request.get_json()
 	pointcloud = PointCloud.parse_json(json_request["pointcloud"])
 	tracker = Tracker(pointcloud)
-	print(str(tracker))
 	return "success"
 
 @app.route("/trackBoundingBoxes", methods=['POST'])
@@ -32,14 +31,12 @@ def trackBoundingBox():
 	pointcloud = PointCloud.parse_json(json_request["pointcloud"], json_request["intensities"])
 	filtered_indices = tracker.filter_pointcloud(pointcloud)
 	next_bounding_boxes = tracker.predict_bounding_boxes(pointcloud)
-	# print(filtered_indices)
 	print(next_bounding_boxes)
 	return str([filtered_indices, next_bounding_boxes])
 
 
 @app.route("/updateBoundingBoxes", methods=['POST'])
 def updateBoundingBoxes():
-	print(request.get_json())
 	json_request = request.get_json()
 	bounding_boxes = BoundingBox.parse_json(json_request["bounding_boxes"])
 	tracker.set_bounding_boxes(bounding_boxes)
@@ -60,15 +57,15 @@ def predictLabel():
 @app.route("/getMaskRCNNLabels", methods=['POST'])
 def getMaskRCNNLabels():
 	filename = request.get_json()['fname']
-	print(filename)
 	return str(get_mask_rcnn_labels(filename))
 
 
 @app.route("/writeOutput", methods=['POST'])
 def writeOutput():
 	frame = request.get_json()['output']
-	print(frame["filename"])
-	fh.save_annotation(frame["filename"], frame["file"])
+	fname = frame['filename']
+	drivename, fname = fname.split('/')
+	fh.save_annotation(drivename, fname, frame["file"])
 	return str("hi")
 
 
@@ -80,21 +77,22 @@ def loadFrameNames():
 def getFramePointCloud():
 	json_request = request.get_json()
 	fname = json_request["fname"]
-	data_str = fh.get_pointcloud(fname, dtype=str)
-	annotation_str = str(fh.load_annotation(fname, dtype='json'))
+	drivename, fname = fname.split("/")
+	data_str = fh.get_pointcloud(drivename, fname, dtype=str)
+	annotation_str = str(fh.load_annotation(drivename, fname, dtype='json'))
 	return '?'.join([data_str, annotation_str])
 
 @app.route("/predictBoundingBox", methods=['POST'])
 def predictBoundingBox():
 	json_request = request.get_json()
 	fname = json_request["fname"]
+	drivename, fname = fname.split("/")
 	point = json_request["point"]
 	point = np.array([point['z'], point['x'], point['y']])
-	print(point)
-	frame = fh.get_pointcloud(fname, dtype=float, ground_removed=False)
-	print("num points with ground: {}".format(frame.shape))
-	frame = fh.get_pointcloud(fname, dtype=float, ground_removed=True)
-	print("num points without ground: {}".format(frame.shape))
+
+	# frame = fh.get_pointcloud(drivename, fname, dtype=float, ground_removed=False)
+	# print("num points with ground: {}".format(frame.shape))
+	frame = fh.get_pointcloud(drivename, fname, dtype=float, ground_removed=True)
 	return str(bp.predict_bounding_box(point, frame))
 
 @app.route("/predictNextFrameBoundingBoxes", methods=['POST'])

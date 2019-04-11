@@ -18,9 +18,10 @@ class BoundingBoxPredictor():
         self.th_dist=.2
 
         self.frame_handler = frame_handler
-        self.oxt_path = "input/"
-        self.oxts = load_oxts_lite_data(self.oxt_path, self.frame_handler.frame_names)
-        self.poses = oxts2pose(self.oxts)
+        self.oxt_path = "oxts/"
+        self.oxts = {drive: load_oxts_lite_data(join(FrameHandler.DATASET_DIR, drive), self.frame_handler.drives[drive]) 
+                    for drive in self.frame_handler.drives.keys()}
+        self.poses = {drive: oxts2pose(self.oxts[drive]) for drive in self.oxts.keys()}
 
     def transform_coords(self, fname, x, inv=False):
         if x.size == 2:
@@ -54,13 +55,13 @@ class BoundingBoxPredictor():
 
         return velocities
 
-    def predict_next_frame_bounding_boxes(self, frame):
+    def predict_next_frame_bounding_boxes(self, drivename, frame):
         fname = frame.fname.split('.')[0]
         idx = self.frame_handler.frame_names.index(fname)
         next_fname = self.frame_handler.frame_names[idx+1]
 
-        pc = self.frame_handler.get_pointcloud(fname, dtype=float, ground_removed=True)
-        next_pc = self.frame_handler.get_pointcloud(next_fname, dtype=float, ground_removed=True)
+        pc = self.frame_handler.get_pointcloud(drivename, fname, dtype=float, ground_removed=True)
+        next_pc = self.frame_handler.get_pointcloud(drivename, next_fname, dtype=float, ground_removed=True)
         print(fname)
         print([box.box_id for box in frame.bounding_boxes])
         bounding_boxes = sorted(frame.bounding_boxes, 

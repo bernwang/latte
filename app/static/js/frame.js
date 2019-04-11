@@ -6,6 +6,7 @@ function Frame(fname, data) {
 	this.ys = [];
 	this.evaluator = new Evaluator();
 	this.annotated = false;
+	this.mask_rcnn_indices = [];
 
 	var k = 0;
     for ( var i = 0, l = this.data.length / DATA_STRIDE; i < l; i ++ ) {

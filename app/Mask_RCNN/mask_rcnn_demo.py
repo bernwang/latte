@@ -36,7 +36,7 @@ def main(data_filename):
 
     # Directory to get binary and image data
     PARENT_DIR = os.path.abspath(os.path.join(ROOT_DIR, os.pardir))
-    DATA_DIR = os.path.join(PARENT_DIR, "input")
+    DATA_DIR = os.path.join(PARENT_DIR, "test_dataset")
 
     # Local path to trained weights file
     COCO_MODEL_PATH =  os.path.join(ROOT_DIR, "mask_rcnn_coco.h5")
@@ -87,10 +87,11 @@ def main(data_filename):
     #file_names = next(os.walk(IMAGE_DIR))[2]
 
     # filename = chooseFile.openFile()
-    filename = os.path.join(DATA_DIR, os.path.join("image", data_filename + ".png"))
-    image = Image.open(os.path.join(filename))
+    drivename, fname = data_filename.split("/")
+    filename = os.path.join(DATA_DIR, drivename, "image", fname) + ".png"
+    image = Image.open(filename)
     start = time()
-    img = skimage.io.imread(os.path.join(filename))
+    img = skimage.io.imread(filename)
     #image = skimage.io.imread(os.path.join(IMAGE_DIR,file_names))
 
     # Run detection
@@ -106,7 +107,7 @@ def main(data_filename):
     calib = Calib('/Users/berniewang/annotator/lidarAnnotator/app/classify/calib')
     im = PIL.Image.open(os.path.join(filename))
     w, h = im.size
-    bin_name = os.path.join(DATA_DIR, os.path.join("bin_data", data_filename + ".bin"))
+    bin_name = os.path.join(DATA_DIR, drivename, "bin_data", fname) + ".bin"
     scan = np.fromfile(
         os.path.join(bin_name),
         dtype=np.float32).reshape((-1, 4))

@@ -33,8 +33,6 @@ var mean, sd, filteredIntensities, min, max, intensities, colors;
 var selected_color = new THREE.Color(0x78F5FF);
 var hover_color = new THREE.Color(1, 0, 0);
 var default_color = new THREE.Color(0xffff00);
-var enable_predict_label = true;
-var enable_mask_rcnn = false;
 var autoDrawMode = false;
 
 init();

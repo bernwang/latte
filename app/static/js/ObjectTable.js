@@ -23,6 +23,12 @@ function addObjectRow(box) {
         "<tr><td class='id'><div class='object_row object_row_id'>{0}</td> \
         <td><div class='object_row'>{1}</div></td></tr>".format(box.id, options)
     );
+    if (box.object_id) {
+        console.log("asssss");
+        var row = getRow(box.id);
+        console.log(row);
+        $(row).find("select").val(box.object_id);
+    }
     $("{0} tbody select".format(OBJECT_TABLE)).last().focus();
 }
 
@@ -176,6 +182,7 @@ function loadObjectTable() {
     if (app.cur_frame) {
         for (var i = 0; i < app.cur_frame.bounding_boxes.length; i++) {
             var box = app.cur_frame.bounding_boxes[i];
+
             addObjectRow(box);
         }
     }

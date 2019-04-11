@@ -68,7 +68,8 @@ def load_oxts_lite_data(base_dir, frames):
     oxts = []
     for frame in frames:
         fname = frame.split(".")[0]
-        filename = os.path.join(os.path.join(base_dir,'oxts/'), fname + '.txt')
+        filename = os.path.join(base_dir,'oxts/', fname + '.txt')
+        print(filename)
         oxts.append(np.loadtxt(filename))
     return oxts
 

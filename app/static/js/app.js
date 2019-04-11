@@ -17,11 +17,13 @@ function App() {
 	        type: 'POST',
 	        contentType: 'application/json;charset=UTF-8',
 	        success: function(response) {
-	            this.fnames = response.split(',');
-	            for (var i = 0; i < app.fnames.length; i++) {
-	            	var fname = this.fnames[i];
-	            	addFrameRow(fname);
-	            	
+	            this.drives = parsePythonJSON(response);
+	            for (var drive in this.drives) {
+	            	for (var j = 0; j < this.drives[drive].length; j++) {
+	            		var fname = pathJoin([drive, this.drives[drive][j].split('.')[0]]);
+	            		this.fnames.push(fname);
+	            		addFrameRow(fname);
+	            	}
 	            }
 	            this.set_frame(this.fnames[0]);
 	            focus_frame_row(getFrameRow(this.fnames[0]));
@@ -316,8 +318,10 @@ function App() {
 	}
 
 	this.get_Mask_RCNN_Labels = function(fname) {
-    if (!enable_mask_rcnn) {return;}
+		console.log(enable_mask_rcnn, this.frames[fname].mask_rcnn_indices.length > 0);
+    if (!enable_mask_rcnn || this.frames[fname].mask_rcnn_indices.length > 0) {return;}
 	    $.ajax({
+	    	context: this,
             url: '/getMaskRCNNLabels',
             data: JSON.stringify({fname: fname}),
             type: 'POST',
@@ -327,6 +331,7 @@ function App() {
                 maskRCNNIndices = response.substring(1, l).split(',').map(Number);
                 // console.log(maskRCNNIndices);
                 // console.log(response);
+                this.frames[fname].mask_rcnn_indices = maskRCNNIndices;
                 highlightPoints(maskRCNNIndices);
                 updateMaskRCNNImagePanel();
             },

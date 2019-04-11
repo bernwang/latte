@@ -46,9 +46,10 @@ import sys
 
 import numpy as np
 
-import tensorflow as tf
 import convert3d_2d as convert
 import json
+import tensorflow as tf
+
 
 FLAGS = None
 
