@@ -9,29 +9,35 @@ function App() {
 	this.show_prev_frame;
 	this.editing_box_id;
 	this.evaluators = [];
+	this.controls = {};
+	this.lock_frame = false;
 
 	this.init = function() {
 		$.ajax({
 			context: this,
-	        url: '/loadFrameNames',
-	        type: 'POST',
-	        contentType: 'application/json;charset=UTF-8',
-	        success: function(response) {
-	            this.drives = parsePythonJSON(response);
-	            for (var drive in this.drives) {
-	            	for (var j = 0; j < this.drives[drive].length; j++) {
-	            		var fname = pathJoin([drive, this.drives[drive][j].split('.')[0]]);
-	            		this.fnames.push(fname);
-	            		addFrameRow(fname);
-	            	}
-	            }
-	            this.set_frame(this.fnames[0]);
-	            focus_frame_row(getFrameRow(this.fnames[0]));
-	        },
-	        error: function(error) {
-	            console.log(error);
-	        }
-	    });
+			url: '/loadFrameNames',
+			type: 'POST',
+			contentType: 'application/json;charset=UTF-8',
+			success: function(response) {
+				this.drives = parsePythonJSON(response);
+				var drive_keys = Object.keys(this.drives);
+				drive_keys.sort();
+				for (var i = 0; i < drive_keys.length; i++) {
+					var drive = drive_keys[i];
+					for (var j = 0; j < this.drives[drive].length; j++) {
+						var fname = pathJoin([drive, this.drives[drive][j].split('.')[0]]);
+						this.fnames.push(fname);
+						addFrameRow(fname);
+						this.controls[fname] = i;
+					}
+				}
+				this.set_frame(this.fnames[0]);
+				focus_frame_row(getFrameRow(this.fnames[0]));
+			},
+			error: function(error) {
+				console.log(error);
+			}
+		});
 	};
 
 	this.get_prev_fname = function(fname) {
@@ -52,7 +58,8 @@ function App() {
 
 	this.set_frame = function(fname) {
 		var frame = this.get_frame(fname);
-		if (this.cur_frame == frame) {
+		// this.set_controls(fname);
+		if (this.cur_frame == frame || this.lock_frame) {
 			return;
 		} 
 		if (this.cur_frame) {
@@ -65,39 +72,39 @@ function App() {
 			this.predict_next_frame_bounding_box(this.get_prev_fname(fname));
 		} else {
 			$.ajax({
-		    	context: this,
-		        url: '/getFramePointCloud',
-		        data: JSON.stringify({fname: fname}),
-		        type: 'POST',
-		        contentType: 'application/json;charset=UTF-8',
-		        success: function(response) {
-		        	var data, res, annotation, bounding_boxes_json, bounding_boxes, box;
-		        	res = response.split('?');
-		            data = res[0].split(',').map(x => parseFloat(x));
-		            var frame = new Frame(fname, data);
+				context: this,
+				url: '/getFramePointCloud',
+				data: JSON.stringify({fname: fname}),
+				type: 'POST',
+				contentType: 'application/json;charset=UTF-8',
+				success: function(response) {
+					var data, res, annotation, bounding_boxes_json, bounding_boxes, box;
+					res = response.split('?');
+					data = res[0].split(',').map(x => parseFloat(x));
+					var frame = new Frame(fname, data);
 
-		            if (res.length > 1 && res[1].length > 0)  {
-		        		annotation = parsePythonJSON(res[1]);
-		        		bounding_boxes_json = Object.values(annotation["frame"]["bounding_boxes"]);
-		        		bounding_boxes = Box.parseJSON(bounding_boxes_json);
-		        		for (var i = 0; i < bounding_boxes.length; i++) {
-		        			box = bounding_boxes[i];
-		        			frame.bounding_boxes.push(box);
-    						box.add_text_label();
-    						frame.annotated = true;
-		        		}
-		        	}
+					if (res.length > 1 && res[1].length > 0)  {
+						annotation = parsePythonJSON(res[1]);
+						bounding_boxes_json = Object.values(annotation["frame"]["bounding_boxes"]);
+						bounding_boxes = Box.parseJSON(bounding_boxes_json);
+						for (var i = 0; i < bounding_boxes.length; i++) {
+							box = bounding_boxes[i];
+							frame.bounding_boxes.push(box);
+							box.add_text_label();
+							frame.annotated = true;
+						}
+					}
 
-			        this.frames[fname] = frame;
+					this.frames[fname] = frame;
 
-			        this.get_Mask_RCNN_Labels(fname);
+					this.get_Mask_RCNN_Labels(fname);
 					this.predict_next_frame_bounding_box(this.get_prev_fname(fname));
 					show(frame);
-		        },
-		        error: function(error) {
-		            console.log(error);
-		        }
-		    });
+				},
+				error: function(error) {
+					console.log(error);
+				}
+			});
 		}
 	};
 
@@ -106,13 +113,16 @@ function App() {
 			return;
 		}
 		var cur_idx = this.fnames.indexOf(fname);
-        console.log("cur idx: ", cur_idx);
+		console.log("cur idx: ", cur_idx);
 		if (cur_idx < 0 ||
 			cur_idx >= this.fnames.length - 1 ||
 			this.frames[this.fnames[cur_idx+1]].is_annotated() ||
 			!this.frames[this.fnames[cur_idx]] || 
 			!this.frames[this.fnames[cur_idx]].is_annotated()) {
 			// console.log("annotated: ", this.frames[fname].is_annotated());
+			return;
+		}
+		if (this.fnames[cur_idx].split("/")[0] != this.fnames[cur_idx+1].split("/")[0]) {
 			return;
 		}
 
@@ -124,37 +134,37 @@ function App() {
 		if (!next_frame.annotated) {
 			next_frame.annotated = true;
 			$.ajax({
-		    	context: this,
-		        url: '/predictNextFrameBoundingBoxes',
-		        data: JSON.stringify({fname: fname}),
-		        type: 'POST',
-		        contentType: 'application/json;charset=UTF-8',
-		        success: function(response) {
-		        	var res = response.split("\'").join("\"");
-		        	console.log(res);
-		        	res = JSON.parse(res);
-		        	console.log(res);
+				context: this,
+				url: '/predictNextFrameBoundingBoxes',
+				data: JSON.stringify({fname: fname}),
+				type: 'POST',
+				contentType: 'application/json;charset=UTF-8',
+				success: function(response) {
+					var res = response.split("\'").join("\"");
+					console.log(res);
+					res = JSON.parse(res);
+					console.log(res);
 					for (var box_id in res) {
-					    if (res.hasOwnProperty(box_id)) {
-					        console.log(res[box_id]);
-					        var json_box = res[box_id];
-					        var corner1 = new THREE.Vector3(json_box.corner1[1], 
-					        								this.eps, 
-					        								json_box.corner1[0]);
-				            var corner2 = new THREE.Vector3(json_box.corner2[1], 
-				            								0, 
-				            								json_box.corner2[0]);
-				            var box = createAndDrawBox(corner1, 
-			            					  corner2, 
-			            					  json_box['angle']);
-				            addBox(box);
-					    }
+						if (res.hasOwnProperty(box_id)) {
+							console.log(res[box_id]);
+							var json_box = res[box_id];
+							var corner1 = new THREE.Vector3(json_box.corner1[1], 
+															this.eps, 
+															json_box.corner1[0]);
+							var corner2 = new THREE.Vector3(json_box.corner2[1], 
+															0, 
+															json_box.corner2[0]);
+							var box = createAndDrawBox(corner1, 
+											  corner2, 
+											  json_box['angle']);
+							addBox(box);
+						}
 					}
-		        },
-		        error: function(error) {
-		            console.log(error);
-		        }
-		    });
+				},
+				error: function(error) {
+					console.log(error);
+				}
+			});
 		}
 	};
 
@@ -165,7 +175,7 @@ function App() {
 			var frame = this.get_frame(fname);
 			return frame.data;
 		}
-	    
+		
 	};
 
 
@@ -180,54 +190,54 @@ function App() {
 		}
 	}
 
-    this.handleBoxResize = function() {
-    	if (!isResizing) {return;}
-    	if (mouseDown) {
-            var cursor = app.getCursor();
-            // cursor's y coordinate nudged to make bounding box matrix invertible
-            cursor.y -= this.eps;
-            resizeBox.resize(cursor);
-            resizeBox.add_timestamp();
+	this.handleBoxResize = function() {
+		if (!isResizing) {return;}
+		if (mouseDown) {
+			var cursor = app.getCursor();
+			// cursor's y coordinate nudged to make bounding box matrix invertible
+			cursor.y -= this.eps;
+			resizeBox.resize(cursor);
+			resizeBox.add_timestamp();
 		} else {
 			// evaluator.increment_resize_count();
-            predictLabel(resizeBox);
-            predictBox = resizeBox;
+			predictLabel(resizeBox);
+			predictBox = resizeBox;
 		}
-    }
+	}
 
 	this.handleBoxMove = function() {
 		if (mouseDown && isMoving) {
-    		selectedBox.translate(this.getCursor());
-            selectedBox.changeBoundingBoxColor(selected_color.clone());
-            selectedBox.add_timestamp();
-    	}
+			selectedBox.translate(this.getCursor());
+			selectedBox.changeBoundingBoxColor(selected_color.clone());
+			selectedBox.add_timestamp();
+		}
 	}
 
 	this.handleAutoDraw = function() {
 		if (autoDrawMode && enable_one_click_annotation) {
 			$.ajax({
 				context: this,
-		        url: '/predictBoundingBox',
-		        type: 'POST',
-		        contentType: 'application/json;charset=UTF-8',
-		        data: JSON.stringify({fname: this.cur_frame.fname, point: app.getCursor()}),
-		        success: function(response) {
-		            console.log(response);
-		            var str = response.replace(/'/g, "\"");
-		            var res = JSON.parse(str);
+				url: '/predictBoundingBox',
+				type: 'POST',
+				contentType: 'application/json;charset=UTF-8',
+				data: JSON.stringify({fname: this.cur_frame.fname, point: app.getCursor()}),
+				success: function(response) {
+					console.log(response);
+					var str = response.replace(/'/g, "\"");
+					var res = JSON.parse(str);
 	
-		            var corner1 = new THREE.Vector3(res.corner1[1], this.eps, res.corner1[0]);
-		            var corner2 = new THREE.Vector3(res.corner2[1], 0, res.corner2[0]);
-		            console.log(corner1);
-		            var box = createAndDrawBox(corner1, 
-		            					corner2, 
-		            					res['angle']);
-		            addBox(box);
-		        },
-		        error: function(error) {
-		            console.log(error);
-		        }
-		    });
+					var corner1 = new THREE.Vector3(res.corner1[1], this.eps, res.corner1[0]);
+					var corner2 = new THREE.Vector3(res.corner2[1], 0, res.corner2[0]);
+					console.log(corner1);
+					var box = createAndDrawBox(corner1, 
+										corner2, 
+										res['angle']);
+					addBox(box);
+				},
+				error: function(error) {
+					console.log(error);
+				}
+			});
 		}
 	}
 
@@ -265,43 +275,43 @@ function App() {
 			var output = {"frame": output_frame};
 			var stringifiedOutput = JSON.stringify(output);
 			$.ajax({
-	            url: '/writeOutput',
-	            data: JSON.stringify({output: {filename: this.cur_frame.fname, 
-	                                            file: stringifiedOutput}}),
-	            type: 'POST',
-	            contentType: 'application/json;charset=UTF-8',
-	            success: function(response) {
-	                console.log("successfully saved output")
-	            },
-	            error: function(error) {
-	                console.log(error);
-	            }
-	        });
+				url: '/writeOutput',
+				data: JSON.stringify({output: {filename: this.cur_frame.fname, 
+												file: stringifiedOutput}}),
+				type: 'POST',
+				contentType: 'application/json;charset=UTF-8',
+				success: function(response) {
+					console.log("successfully saved output")
+				},
+				error: function(error) {
+					console.log(error);
+				}
+			});
 		}
 	}
 
 	this.render_text_labels = function() {
 		if (app.cur_frame) {
-	        for (var i = 0; i < app.cur_frame.bounding_boxes.length; i++) {
-	            var box = app.cur_frame.bounding_boxes[i];
-	            if (box.text_label) {
-	                box.text_label.updatePosition();
-	            }
-	        }
+			for (var i = 0; i < app.cur_frame.bounding_boxes.length; i++) {
+				var box = app.cur_frame.bounding_boxes[i];
+				if (box.text_label) {
+					box.text_label.updatePosition();
+				}
+			}
 
-	        if (app.show_prev_frame) {
-	        	var prev_frame = this.get_prev_frame();
-	        	if (!prev_frame) {
-	        		return;
-	        	}
-	            for (var i = 0; i < prev_frame.bounding_boxes.length; i++) {
-	                var box = prev_frame.bounding_boxes[i];
-	                if (box.text_label) {
-	                    box.text_label.updatePosition();
-	                }
-	            }
-	        }
-	    }
+			if (app.show_prev_frame) {
+				var prev_frame = this.get_prev_frame();
+				if (!prev_frame) {
+					return;
+				}
+				for (var i = 0; i < prev_frame.bounding_boxes.length; i++) {
+					var box = prev_frame.bounding_boxes[i];
+					if (box.text_label) {
+						box.text_label.updatePosition();
+					}
+				}
+			}
+		}
 	}
 
 	this.generate_new_box_id = function() {
@@ -319,26 +329,29 @@ function App() {
 
 	this.get_Mask_RCNN_Labels = function(fname) {
 		console.log(enable_mask_rcnn, this.frames[fname].mask_rcnn_indices.length > 0);
-    if (!enable_mask_rcnn || this.frames[fname].mask_rcnn_indices.length > 0) {return;}
-	    $.ajax({
-	    	context: this,
-            url: '/getMaskRCNNLabels',
-            data: JSON.stringify({fname: fname}),
-            type: 'POST',
-            contentType: 'application/json;charset=UTF-8',
-            success: function(response) {
-                var l = response.length - 1;
-                maskRCNNIndices = response.substring(1, l).split(',').map(Number);
-                // console.log(maskRCNNIndices);
-                // console.log(response);
-                this.frames[fname].mask_rcnn_indices = maskRCNNIndices;
-                highlightPoints(maskRCNNIndices);
-                updateMaskRCNNImagePanel();
-            },
-            error: function(error) {
-                console.log(error);
-            }
-        });
+	if (!enable_mask_rcnn || this.frames[fname].mask_rcnn_indices.length > 0) {return;}
+		this.lock_frame = true;
+		$.ajax({
+			context: this, 
+			url: '/getMaskRCNNLabels',
+			data: JSON.stringify({fname: fname}),
+			type: 'POST',
+			contentType: 'application/json;charset=UTF-8',
+			success: function(response) {
+				var l = response.length - 1;
+				maskRCNNIndices = response.substring(1, l).split(',').map(Number);
+				// console.log(maskRCNNIndices);
+				// console.log(response);
+				this.frames[fname].mask_rcnn_indices = maskRCNNIndices;
+				highlightPoints(maskRCNNIndices);
+				updateMaskRCNNImagePanel();
+				this.lock_frame = false;
+			},
+			error: function(error) {
+				console.log(error);
+				this.lock_frame = false;
+			}
+		});
 	}
 
 	this.pause_3D_time = function() {
@@ -412,6 +425,42 @@ function App() {
 		}
 	}
 
+	this.set_controls = function(fname) {
+		var i = this.controls[fname];
+		console.log("asdf, ", i);
+		if (i == 0) {
+			enable_predict_label = false;
+			enable_mask_rcnn = false;
+			enable_one_click_annotation = false;
+			enable_bounding_box_tracking = false;
+		} else if (i == 1) {
+			enable_predict_label = true;
+			enable_mask_rcnn = true;
+			enable_one_click_annotation = false;
+			enable_bounding_box_tracking = false;
+		} else if (i == 2) {
+			enable_predict_label = false;
+			enable_mask_rcnn = false;
+			enable_one_click_annotation = true;
+			enable_bounding_box_tracking = false;
+		} else if (i == 3) {
+			enable_predict_label = false;
+			enable_mask_rcnn = false;
+			enable_one_click_annotation = false;
+			enable_bounding_box_tracking = true;
+		} else if (i == 4) {
+			enable_predict_label = true;
+			enable_mask_rcnn = true;
+			enable_one_click_annotation = true;
+			enable_bounding_box_tracking = false;
+		} else if (i == 5) {
+			enable_predict_label = true;
+			enable_mask_rcnn = true;
+			enable_one_click_annotation = true;
+			enable_bounding_box_tracking = true;
+		}
+	}
+
 }
 
 function parsePythonJSON(json) {
@@ -419,27 +468,27 @@ function parsePythonJSON(json) {
 }
 
 function show(frame) {
-    var initPointCloud;
+	var initPointCloud;
 
-    if (app.cur_frame) {
-    	clearObjectTable();
-    }
-    app.cur_frame = frame;
-    if (app.cur_pointcloud == null) {
-    	initPointCloud = true;
-    }
-    // add pointcloud to scene
-    generatePointCloud();
+	if (app.cur_frame) {
+		clearObjectTable();
+	}
+	app.cur_frame = frame;
+	if (app.cur_pointcloud == null) {
+		initPointCloud = true;
+	}
+	// add pointcloud to scene
+	generatePointCloud();
 
-    if (initPointCloud) {
-    	scene.add( app.cur_pointcloud )
-    	animate();
-    }
-    app.cur_frame.scene_add_frame_children();
-    loadObjectTable();
-    switchMoveMode();
+	if (initPointCloud) {
+		scene.add( app.cur_pointcloud )
+		animate();
+	}
+	app.cur_frame.scene_add_frame_children();
+	loadObjectTable();
+	switchMoveMode();
 
-    if (isRecording) {
-        toggleRecord(event);
-    }
+	if (isRecording) {
+		toggleRecord(event);
+	}
 }

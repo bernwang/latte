@@ -9,7 +9,7 @@ FRAME_ROW_NORMAL = "rgba(80, 80, 80, 0.7)";
 /* Variables to toggle */
 var enable_predict_label = false;
 var enable_mask_rcnn = false;
-var enable_one_click_annotation = true;
+var enable_one_click_annotation = false;
 var enable_bounding_box_tracking = false;
 
 

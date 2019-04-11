@@ -1,7 +1,6 @@
 from flask import Flask, render_template, request, jsonify
 from models import BoundingBox
 from pointcloud import PointCloud
-from tracker import Tracker
 from predict_label import predict_label
 from mask_rcnn import get_mask_rcnn_labels
 from frame_handler import FrameHandler
@@ -99,7 +98,8 @@ def predictBoundingBox():
 def predictNextFrameBoundingBoxes():
 	json_request = request.get_json()
 	fname = json_request["fname"]
-	frame = fh.load_annotation(fname)
+	drivename, fname = fname.split("/")
+	frame = fh.load_annotation(drivename, fname)
 	res = bp.predict_next_frame_bounding_boxes(frame)
 	keys = res.keys()
 	for key in keys:
@@ -117,9 +117,7 @@ def loadAnnotation():
 
 
 if __name__ == "__main__":
-	tracker = Tracker()
 	fh = FrameHandler()
 	bp = BoundingBoxPredictor(fh)
-	# pf = ParticleFilter(N=500)
 	os.system("rm {}/*".format(os.path.join(DIR_PATH, "static/images")))
 	app.run()

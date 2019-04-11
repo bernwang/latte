@@ -437,11 +437,9 @@ function moveMode( event ) {
         document.getElementById( 'move' ).className = "selected";
         controls.maxPolarAngle = 2 * Math.PI;
         controls.minPolarAngle = -2 * Math.PI;
-        unprojectFromXZ();
-
-
         app.resume_3D_time();
     }
+    unprojectFromXZ();
 }
 
 // function assertRecordMode() {

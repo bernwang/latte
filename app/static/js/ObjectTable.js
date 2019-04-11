@@ -34,13 +34,15 @@ function addObjectRow(box) {
 
 $(FRAMES_TABLE).on("mousedown", "tbody tr", function() {
     var frameId = $(this).find('.fname').text();
-    app.set_frame(frameId);
-    $("{0} tbody tr".format(FRAMES_TABLE)).each(
-        function(idx, elem) {
-            unfocus_frame_row(elem);
-        }
-    );
-    focus_frame_row($(this));
+    if (!app.frame_lock) {
+        app.set_frame(frameId);
+        $("{0} tbody tr".format(FRAMES_TABLE)).each(
+            function(idx, elem) {
+                unfocus_frame_row(elem);
+            }
+        );
+        focus_frame_row($(this));
+    }
 });
 
 function focus_frame_row(frame) {

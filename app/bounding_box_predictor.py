@@ -1,3 +1,5 @@
+import matplotlib
+matplotlib.use('TkAgg')
 import numpy as np
 from scipy.spatial import cKDTree
 from models import BoundingBox, Frame
@@ -55,10 +57,11 @@ class BoundingBoxPredictor():
 
         return velocities
 
-    def predict_next_frame_bounding_boxes(self, drivename, frame):
-        fname = frame.fname.split('.')[0]
-        idx = self.frame_handler.frame_names.index(fname)
-        next_fname = self.frame_handler.frame_names[idx+1]
+    def predict_next_frame_bounding_boxes(self, frame):
+        drivename, fname = frame.fname.split('.')[0].split("/")
+        print(self.frame_handler.drives[drivename])
+        idx = self.frame_handler.drives[drivename].index(fname)
+        next_fname = self.frame_handler.drives[drivename][idx+1]
 
         pc = self.frame_handler.get_pointcloud(drivename, fname, dtype=float, ground_removed=True)
         next_pc = self.frame_handler.get_pointcloud(drivename, next_fname, dtype=float, ground_removed=True)
