@@ -58,7 +58,7 @@ function App() {
 
 	this.set_frame = function(fname) {
 		var frame = this.get_frame(fname);
-		// this.set_controls(fname);
+		this.set_controls(fname);
 		if (this.cur_frame == frame || this.lock_frame) {
 			return;
 		} 
@@ -452,7 +452,7 @@ function App() {
 			enable_predict_label = true;
 			enable_mask_rcnn = true;
 			enable_one_click_annotation = true;
-			enable_bounding_box_tracking = false;
+			enable_bounding_box_tracking = true;
 		} else if (i == 5) {
 			enable_predict_label = true;
 			enable_mask_rcnn = true;

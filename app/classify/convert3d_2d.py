@@ -23,9 +23,9 @@ CUR_DIR = os.path.dirname(os.path.realpath(__file__))
 PARENT_DIR = os.path.abspath(os.path.join(CUR_DIR, os.pardir))
 
 IMAGE_OUTPUT_PATH = os.path.join(CUR_DIR, "inception")
-DATA_DIR = os.path.join(PARENT_DIR, "input")
-image_ab_path = os.path.join(DATA_DIR, "image")
-bin_ab_path = os.path.join(DATA_DIR, "bin_data")
+DATA_DIR = os.path.join(PARENT_DIR, "test_dataset")
+IMAGE_PATH = "image"
+BIN_PATH = "bin_data"
 CALIBRATION_PATH = os.path.join(CUR_DIR, "calib")
 
 def rotation_matrix(theta):
@@ -36,7 +36,10 @@ def generate_2d_lidar():
     calib = Calib(CALIBRATION_PATH)
      # load image
     img_name = getCoord.getPictureName()
-    im = Image.open(os.path.join(image_ab_path, img_name)+'.png')
+    drivename, fname = img_name.split("/")
+    fname = fname.split(".")[0]
+    print("img_name: ", img_name)
+    im = Image.open(os.path.join(DATA_DIR, drivename, IMAGE_PATH, fname) +'.png')
     w, h = im.size
     #im = np.array(im)
 
@@ -44,7 +47,7 @@ def generate_2d_lidar():
     bin_name = getCoord.getFileName()
     # print(bin_name)
     scan = np.fromfile(
-        os.path.join(bin_ab_path, bin_name)+'.bin',
+        os.path.join(DATA_DIR, drivename, BIN_PATH, fname)+'.bin',
         dtype=np.float32).astype(float).reshape((-1, 4))
     #im_coord0 = calib.velo2img(scan[:, :3], 2).astype(np.int)
 

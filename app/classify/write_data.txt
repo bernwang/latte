@@ -1,1 +1,1 @@
-tow truck, tow car, wrecker (score = 0.40966)
+parking meter (score = 0.30901)
