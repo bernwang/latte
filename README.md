@@ -1,4 +1,4 @@
-# LiDAR Annotator
+# Latte - A LiDAR Annotation Tool
 ## Bernie Wang, Virginia Wu, Bichen Wu, Kurt Keutzer
 LiDAR annotation tool using ray tracing and bounding boxes.
 ![Alt Text](https://github.com/bernwang/LiDAR-annotator/blob/evaluation/gifs/step1.gif)
