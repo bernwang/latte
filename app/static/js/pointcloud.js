@@ -52,7 +52,7 @@ function normalizeColors(vertices, color) {
 function highlightPoints(indices) {
     var pointcloud = app.cur_pointcloud;
     for (var j = 0; j < indices.length; j++) {
-        pointcloud.geometry.colors[indices[j]] = new THREE.Color( 0,1,0 );
+        pointcloud.geometry.colors[indices[j]] = new THREE.Color(0x00ff6b);
     }
     pointcloud.geometry.colorsNeedUpdate = true;
 

@@ -222,7 +222,7 @@ class BoundingBoxPredictor():
             plt.plot(y, x, c=c, label=label)
 
     def search_farthest_nearest_neighbor(self, point, kd_tree, th_dist):
-        num_nn = 8
+        num_nn = 2
         dists, nn_indices = kd_tree.query(point, num_nn)
         # print("th dist: ", th_dist)
         while (dists[-1] < th_dist):
@@ -230,7 +230,7 @@ class BoundingBoxPredictor():
             dists, nn_indices = kd_tree.query(point, num_nn)
         return dists, nn_indices
 
-    def find_cluster(self, sample_indices, pc, th_dist=.3, num_nn=16, num_samples=20, overlap_thresh=.2):
+    def find_cluster(self, sample_indices, pc, th_dist=.2, density_thresh=10, num_nn=16, num_samples=20, overlap_thresh=.2):
         clusters = []
         seen_indices = []
         kd_tree = cKDTree(pc)
@@ -246,10 +246,11 @@ class BoundingBoxPredictor():
                 cluster.append(point)
                 dists, nn_indices = self.search_farthest_nearest_neighbor(point, kd_tree, th_dist)
                 # dists, nn_indices = kd_tree.query(point, num_nn)
-                for i in range(len(nn_indices)):
-                    if nn_indices[i] not in seen and dists[i] < th_dist:
-                        seen.add(nn_indices[i])
-                        queue.append(nn_indices[i])
+                if (len(nn_indices) > density_thresh):
+                    for i in range(len(nn_indices)):
+                        if nn_indices[i] not in seen and dists[i] < th_dist:
+                            seen.add(nn_indices[i])
+                            queue.append(nn_indices[i])
                 
             clusters.append(np.vstack(cluster))
             seen_indices.append(np.array(list(seen)))

@@ -43,6 +43,7 @@ function init() {
 
     var container = document.getElementById( 'container' );
     scene = new THREE.Scene();
+    // scene.background = new THREE.Color( 0xffffff );
     clock = new THREE.Clock();
 
     // set up PerspectiveCamera
@@ -52,7 +53,7 @@ function init() {
 
     //
     grid = new THREE.GridHelper( 200, 20, 0xffffff, 0xffffff );
-    scene.add( grid );
+    // scene.add( grid );
 
     // set up renderer
     renderer = new THREE.WebGLRenderer({preserveDrawingBuffer: true});

@@ -58,7 +58,7 @@ function App() {
 
 	this.set_frame = function(fname) {
 		var frame = this.get_frame(fname);
-		this.set_controls(fname);
+		// this.set_controls(fname);
 		if (this.cur_frame == frame || this.lock_frame) {
 			return;
 		} 
