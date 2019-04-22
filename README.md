@@ -14,8 +14,9 @@ Demo Video: [https://www.youtube.com/watch?v=QWjWpqvYA_c](https://www.youtube.co
    ```bash
    pip3 install -r requirements.txt
    ```
-3. To run the tool, run `python app.py` in wherever you have your `app` directory is
-4. Open http://127.0.0.1:5000/ on a browser (preferably Chrome, but definitely not FireFox)
+3. Download pre-trained COCO weights (mask_rcnn_coco.h5) from the [releases page](https://github.com/matterport/Mask_RCNN/releases) into app/Mask_RCNN.
+4. To run the tool, run `python app.py` in wherever you have your `app` directory is
+5. Open http://127.0.0.1:5000/ on a browser (preferably Chrome, but definitely not FireFox)
 
 # For people using the annotator for the efficiency test, read this first
 1. Batches of frames are found in `app/test_datasets`
