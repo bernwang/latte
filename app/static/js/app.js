@@ -488,7 +488,7 @@ function show(frame) {
 	loadObjectTable();
 	switchMoveMode();
 
-	if (isRecording) {
-		toggleRecord(event);
-	}
+	// if (isRecording) {
+	// 	toggleRecord(event);
+	// }
 }

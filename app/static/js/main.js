@@ -82,7 +82,7 @@ function init() {
     document.getElementById( 'move2D' ).addEventListener( 'click', move2DMode, false );
     document.addEventListener("keydown", onKeyDown2);  //or however you are calling your method
     document.addEventListener("keyup", onKeyUp2);
-    document.getElementById( 'record' ).addEventListener( 'click', toggleRecord, false );
+    // document.getElementById( 'record' ).addEventListener( 'click', toggleRecord, false );
 
     window.onbeforeunload = function(evt) {
         return true;

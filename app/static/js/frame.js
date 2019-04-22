@@ -59,7 +59,7 @@ function Frame(fname, data) {
 function OutputFrame(frame) {
 	this.fname = frame.fname;
 	this.bounding_boxes = [];
-	this.evaluator = new OutputEvaluator(frame.evaluator);
+	// this.evaluator = new OutputEvaluator(frame.evaluator);
 
 	for (var i = 0; i < frame.bounding_boxes.length; i++) {
 		this.bounding_boxes.push(frame.bounding_boxes[i].output());
