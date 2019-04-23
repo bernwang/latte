@@ -2,16 +2,41 @@
 
 By Bernie Wang, Virginia Wu, Bichen Wu, Kurt Keutzer
 
-LiDAR annotation tool using ray tracing and bounding boxes. A demonstration of LATTE can be found below:
+A demonstration of LATTE can be found below:
 
 ![Alt Text](https://github.com/bernwang/LiDAR-annotator/blob/master/gifs/github_repo_demo.gif)
 
 Please refer to our video for a more in-depth demo: https://www.youtube.com/watch?v=QWjWpqvYA_c. For more details, please refer to our paper: https://arxiv.org/abs/1904.09085. If you find this work useful for your research, please consider citing:
 ``` 
-   @unpublished{wang2019latte,
+   @article{wang2019latte,
       title={LATTE: Accelerating LiDAR Point Cloud Annotation via Sensor Fusion, One-Click Annotation, and Tracking},
       author={Wang, Bernie and Wu, Virginia and Wu, Bichen and Keutzer, Kurt},
+      journal={arXiv preprint arXiv:1904.09085},
       year={2019}
+   }
+   ```
+   
+Related works:
+```
+   @article{wu2017squeezeseg,
+       title={Squeezeseg: Convolutional neural nets with recurrent crf for real-time road-object segmentation from 3d lidar point cloud},
+       author={Wu, Bichen and Wan, Alvin and Yue, Xiangyu and Keutzer, Kurt},
+       journal={ICRA},
+       year={2018}
+   }
+   @inproceedings{wu2018squeezesegv2,
+       title={SqueezeSegV2: Improved Model Structure and Unsupervised Domain Adaptation for Road-Object Segmentation from a LiDAR Point            Cloud},
+       author={Wu, Bichen and Zhou, Xuanyu and Zhao, Sicheng and Yue, Xiangyu and Keutzer, Kurt},
+       booktitle={ICRA},
+       year={2019},
+   }
+   @inproceedings{yue2018lidar,
+       title={A lidar point cloud generator: from a virtual world to autonomous driving},
+       author={Yue, Xiangyu and Wu, Bichen and Seshia, Sanjit A and Keutzer, Kurt and Sangiovanni-Vincentelli, Alberto L},
+       booktitle={ICMR},
+       pages={458--464},
+       year={2018},
+       organization={ACM}
    }
 ```
 
@@ -46,29 +71,7 @@ Please refer to our video for a more in-depth demo: https://www.youtube.com/watc
 # Annotating your own LiDAR data
 Your LiDAR data should include a binary file of the full point cloud, a binary file of the point cloud with the ground removed, and an image. See app/test_dataset for examples. After you have formated your data, place them in app/test_dataset. 
 
-# Drawing bounding boxes
-![Alt Text](https://github.com/bernwang/LiDAR-annotator/blob/master/gifs/step1.gif)
-
-Bounding boxes can be drawn by holding the control key and clicking and dragging. When drawing bounding boxes, please view in 2D mode (rightmost button): 
-
-![Alt Text](https://github.com/bernwang/LiDAR-annotator/blob/master/images/different_modes.png)
-
-The control key must held down for all bounding box operations. The follow features are supported:
-## Resizing
-1. To resize bounding box, click and drag the "corner" vertices
-2. You can only click and drag on a corner vertex if it is blue. It will turn blue if your mouse is close enough to it. 
-
-## Translation
-- When your cursor is inside the box and the box color changes to red, you can drag it around. 
-
-## Rotation
-
-![Alt Text](https://github.com/bernwang/LiDAR-annotator/blob/master/images/bounding_box.png)
-
-1. To rotate bounding box, click and drag the point that is not a corner vertex (it should be between two corner vertices) and box will rotate with the point. 
-
-## Deletion
-- To delete bounding box, press the backspace/delete key while the bounding box is selected. 
+# Operations for Annotation
 
 ## One-click bounding box drawing
 ![Alt Text](https://github.com/bernwang/LiDAR-annotator/blob/master/gifs/one_click_annotation_cropped.gif)
@@ -82,13 +85,38 @@ The control key must held down for all bounding box operations. The follow featu
 - 3D point cloud is projected onto the image which is then segmented by Mask R-CNN. The 3D points that are projected onto the masks are highlighted, and the segmented image is displayed.
 - An image classifier is used to pre-label a bounding box when it is manually drawn. 
 
-# Controls
-## "3D" mode
+## Drawing Bounding Boxes
+
+![Alt Text](https://github.com/bernwang/LiDAR-annotator/blob/master/gifs/step1.gif)
+
+Bounding boxes can be drawn by holding the control key and clicking and dragging. When drawing bounding boxes, please view in 2D mode (rightmost button): 
+
+![Alt Text](https://github.com/bernwang/LiDAR-annotator/blob/master/images/different_modes.png)
+
+The control key must held down for all bounding box operations. The follow features are supported:
+### Resizing
+1. To resize bounding box, click and drag the "corner" vertices
+2. You can only click and drag on a corner vertex if it is blue. It will turn blue if your mouse is close enough to it. 
+
+### Translation
+- When your cursor is inside the box and the box color changes to red, you can drag it around. 
+
+### Rotation
+
+![Alt Text](https://github.com/bernwang/LiDAR-annotator/blob/master/images/bounding_box.png)
+
+1. To rotate bounding box, click and drag the point that is not a corner vertex (it should be between two corner vertices) and box will rotate with the point. 
+
+### Deletion
+- To delete bounding box, press the backspace/delete key while the bounding box is selected. 
+
+## Controls
+### "3D" mode
 1. Left click and drag to orbit around the point cloud
 2. Right click and drag to translate.
 3. You can label objects in "3D" mode (see "labelling bounding boxes")
 
-## Labelling Bounding Boxes
+### Labelling Bounding Boxes
 1. Click on the index of a bounding box in the "object id table" and its corresponding bounding box will change color to blue.
 2. To change label, just change the value in the dropdown input, and the bounding box's object id will save automatically on input change
 3. You can also delete a bounding box by selecting its corresponding row, and the bounding box should turn blue. Then press the delete or backspace key to delete the bounding box. Its corresponding table row should also be deleted. 
