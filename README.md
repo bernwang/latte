@@ -4,7 +4,7 @@ By Bernie Wang, Virginia Wu, Bichen Wu, Kurt Keutzer
 
 LiDAR annotation tool using ray tracing and bounding boxes. A demonstration of LATTE can be found below:
 
-![Alt Text](https://github.com/bernwang/LiDAR-annotator/blob/evaluation/gifs/step1.gif)
+![Alt Text](https://github.com/bernwang/LiDAR-annotator/blob/master/gifs/step1.gif)
 
 Please refer to our video for a more in-depth demo: https://www.youtube.com/watch?v=QWjWpqvYA_c. For more details, please refer to our paper: https://arxiv.org/abs/1904.09085. If you find this work useful for your research, please consider citing:
 ``` 
@@ -65,7 +65,7 @@ The control key must held down for all bounding box operations. The follow featu
 
 ## Rotation
 
-![Alt Text](https://github.com/bernwang/LiDAR-annotator/blob/evaluation/images/bounding_box.png)
+![Alt Text](https://github.com/bernwang/LiDAR-annotator/blob/master/images/bounding_box.png)
 
 1. To rotate bounding box, click and drag the point that is not a corner vertex (it should be between two corner vertices) and box will rotate with the point. 
 
@@ -73,6 +73,7 @@ The control key must held down for all bounding box operations. The follow featu
 1. To delete bounding box, press the backspace/delete key while the bounding box is selected. 
 
 ## One-click bounding box drawing
+![Alt Text](https://github.com/bernwang/LiDAR-annotator/blob/master/gifs/one_click_annotation_cropped.gif)
 1. Instead of holding the control key, hold the `a` key. Then click a point in the cluster and the tool will draw a bounding box. 
 2. You can adjust the auto-drawn bounding box afterwards
 
