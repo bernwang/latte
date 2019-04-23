@@ -26,6 +26,9 @@ Demo Video: [https://www.youtube.com/watch?v=QWjWpqvYA_c](https://www.youtube.co
 6. After all frames in the batch are annotated, please move them (in `app/output`) to `app/test_outputs/<drive_name>` where `drive_name` is the name of the input directory.
 7. When you're ready to annotate the next batch, repeat steps 1 to 6.
 
+# Annotating your own LiDAR data
+Your LiDAR data should include a binary file of the full point cloud, a binary file of the point cloud with the ground removed, and an image. See app/test_dataset for examples. After you have formated your data, place them in app/test_dataset. 
+
 # Drawing bounding boxes
 Bounding boxes can be drawn by holding the control key and clicking and dragging. When drawing bounding boxes, please view in 2D mode (rightmost button): 
 
