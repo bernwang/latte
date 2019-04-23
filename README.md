@@ -1,8 +1,19 @@
-# Latte - A LiDAR Annotation Tool
-## Bernie Wang, Virginia Wu, Bichen Wu, Kurt Keutzer
-LiDAR annotation tool using ray tracing and bounding boxes.
+# _LATTE_: Accelerating LiDAR Point Cloud Annotation via Sensor Fusion, One-Click Annotation, and Tracking
+
+By Bernie Wang, Virginia Wu, Bichen Wu, Kurt Keutzer
+
+LiDAR annotation tool using ray tracing and bounding boxes. A demonstration of LATTE can be found below:
+
 ![Alt Text](https://github.com/bernwang/LiDAR-annotator/blob/evaluation/gifs/step1.gif)
-Demo Video: [https://www.youtube.com/watch?v=QWjWpqvYA_c](https://www.youtube.com/watch?v=QWjWpqvYA_c&feature=youtu.be)
+
+Please refer to our video for a more in-depth demo: https://www.youtube.com/watch?v=QWjWpqvYA_c. For more details, please refer to our paper: https://arxiv.org/abs/1904.09085. If you find this work useful for your research, please consider citing:
+``` 
+   @unpublished{wang2019latte,
+      title={LATTE: Accelerating LiDAR Point Cloud Annotation via Sensor Fusion, One-Click Annotation, and Tracking},
+      author={Wang, Bernie and Wu, Virginia and Wu, Bichen and Keutzer, Kurt},
+      year={2019}
+   }
+```
 
 ## Installation
 1. Clone this repository
@@ -10,24 +21,34 @@ Demo Video: [https://www.youtube.com/watch?v=QWjWpqvYA_c](https://www.youtube.co
    ```bash
    git checkout evaluation`
    ```
-2. Install dependencies
+3. Setup virtual environment:
+   ```Shell
+   virtualenv env
+   ```
+   Activate the virtual environment
+   ```Shell
+   source env/bin/activate
+   ```
+4. Install dependencies. By default we use Python3.
    ```bash
    pip3 install -r requirements.txt
    ```
-3. Download pre-trained COCO weights (mask_rcnn_coco.h5) from the [releases page](https://github.com/matterport/Mask_RCNN/releases) into app/Mask_RCNN.
-4. To run the tool, run `python app.py` in wherever you have your `app` directory is
-5. Open http://127.0.0.1:5000/ on a browser (preferably Chrome, but definitely not FireFox)
+5. Download pre-trained COCO weights (mask_rcnn_coco.h5) from the [releases page](https://github.com/matterport/Mask_RCNN/releases) into app/Mask_RCNN.
+6. To run the tool, run `python app.py` in wherever you have your `app` directory is
+7. Open http://127.0.0.1:5000/ on a browser (FireFox has been noted to have compatibility issues)
 
-# For people using the annotator for the efficiency test, read this first
+# Annotation quick start guide
 1. Batches of frames are found in `app/test_datasets`
-2. Copy one of the folders in directory to `app` (it should look like `app/<number>_drive_<number>_sync`) and rename it to input (`app/input`). Make sure `app/output` directory is empty. 
-3. There is a record button so that you can pause the test if you want. This will disable most functionality of the tool. Please pause if you want to take a break, but it is suggested to take breaks between batches. Click on the button again to resume recording. Recording will be automatically paused when you move onto a new frame. 
-4. To move onto the next frame, click "Next frame". Annotation will automatically save when you switch frames. There is a save button on the top left. The last frame does not automatically save so please use that save button instead. 
-5. Please look at the "controls" section to understand how to draw/edit bounding boxes. Read "my strategy for annotating" for a quickstart on annotating. In my opinion, this is the most efficient way to annotate with this current version for people who are new. 
-6. After all frames in the batch are annotated, please move them (in `app/output`) to `app/test_outputs/<drive_name>` where `drive_name` is the name of the input directory.
-7. When you're ready to annotate the next batch, repeat steps 1 to 6.
-8. Thank you for participating in the efficiency test! Your time and effort goes into making the LiDAR annotater better!
+2. Segmentation performed by Mask R-CNN is done when a frame is loaded
+3. To draw bounding box, see Drawing bounding boxes
+4. For one-click annotation, hold the a key and click on a point cloud. You can make fine adjustments if necessary. 
+5. To move onto the next frame, click one the name of the next frame. Annotation will automatically save when you switch frames
+6. When moving on to the next frame, tracking will propagate predicted bounding boxes. Adjustments should be made to correct any misalignment. 
+7. There is a save button on the top left. The last frame does not automatically save so please use that save button instead. 
+8. When you're ready to annotate the next batch, repeat steps 2 to 6.
 
+# Annotating your own LiDAR data
+Your LiDAR data should include a binary file of the full point cloud, a binary file of the point cloud with the ground removed, and an image. See app/test_dataset for examples. After you have formated your data, place them in app/test_dataset. 
 
 # Drawing bounding boxes
 Bounding boxes can be drawn by holding the control key and clicking and dragging. When drawing bounding boxes, please view in 2D mode (rightmost button): 
@@ -58,31 +79,11 @@ The control key must held down for all bounding box operations. The follow featu
 ## Frame-by-frame tracking
 1. After annotating a frame, the next frame can be auto-annotated. 
 
-<!---
-# My strategy for annotating
-1. Go into "draw" mode. Draw bounding boxes for all objects of interest (i.e. vehicles, pedestrians, cyclists). 
-2. Then, in "3D mode", for each row in the Object ID table, click on the object number, and its corresponding bounding box will turn blue. Then adjust the object id (car, van, truck, etc.) to what you think that object is. If the object is not an object of interest, just hit the delete or backspace key to delete the bounding box. 
-![Alt Text](https://github.com/bernwang/LiDAR-annotator/blob/evaluation/gifs/step2.gif)
-3. If you miss any object of interest, go back to "draw" mode to draw a bounding box for it.
-4. Repeat (1) through (3) until you think that all objects of interest are covered.
---->
 # Controls
 ## "3D" mode
 1. Left click and drag to orbit around the point cloud
 2. Right click and drag to translate.
 3. You can label objects in "3D" mode (see "labelling bounding boxes")
-
-<!---
-## "2D/Draw" mode
-(Note: While in "2D move" mode, hold the control key to be in "draw mode")
-1. Click and drag to draw a bounding box and release to set it
-2. To resize bounding box, click and drag the "corner" vertices
-3. You can only click and drag on a corner vertex if it is blue. It will turn blue if your mouse is close enough to it. 
-3. To rotate bounding box, click and drag the point that is not a corner vertex (it should be between two corner vertices) and box will rotate with the point. 
-4. To "select" bounding box, first hover above it. You can tell it is hovered if it turns red. Then click somewhere strictly inside a bounding box, and the borders will turn blue. 
-5. To delete bounding box, press the backspace/delete key while the bounding box is selected. 
-6. When a bounding box is selected, the input for its corresponding row in the object ID table is focused. (see "labelling bounding boxes")
---->
 
 ## Labelling Bounding Boxes
 1. Click on the index of a bounding box in the "object id table" and its corresponding bounding box will change color to blue.
