@@ -4,7 +4,7 @@ By Bernie Wang, Virginia Wu, Bichen Wu, Kurt Keutzer
 
 LiDAR annotation tool using ray tracing and bounding boxes. A demonstration of LATTE can be found below:
 
-![Alt Text](https://github.com/bernwang/LiDAR-annotator/blob/master/gifs/step1.gif)
+![Alt Text](https://github.com/bernwang/LiDAR-annotator/blob/master/gifs/github_repo_demo.gif)
 
 Please refer to our video for a more in-depth demo: https://www.youtube.com/watch?v=QWjWpqvYA_c. For more details, please refer to our paper: https://arxiv.org/abs/1904.09085. If you find this work useful for your research, please consider citing:
 ``` 
@@ -47,6 +47,8 @@ Please refer to our video for a more in-depth demo: https://www.youtube.com/watc
 Your LiDAR data should include a binary file of the full point cloud, a binary file of the point cloud with the ground removed, and an image. See app/test_dataset for examples. After you have formated your data, place them in app/test_dataset. 
 
 # Drawing bounding boxes
+![Alt Text](https://github.com/bernwang/LiDAR-annotator/blob/master/gifs/step1.gif)
+
 Bounding boxes can be drawn by holding the control key and clicking and dragging. When drawing bounding boxes, please view in 2D mode (rightmost button): 
 
 ![Alt Text](https://github.com/bernwang/LiDAR-annotator/blob/master/images/different_modes.png)
