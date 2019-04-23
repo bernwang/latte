@@ -17,11 +17,7 @@ Please refer to our video for a more in-depth demo: https://www.youtube.com/watc
 
 ## Installation
 1. Clone this repository
-2. Checkout the evaluation branch
-   ```bash
-   git checkout evaluation`
-   ```
-3. Setup virtual environment:
+2. Setup virtual environment:
    ```Shell
    virtualenv env
    ```
@@ -29,13 +25,13 @@ Please refer to our video for a more in-depth demo: https://www.youtube.com/watc
    ```Shell
    source env/bin/activate
    ```
-4. Install dependencies. By default we use Python3.
+3. Install dependencies. By default we use Python3.
    ```bash
    pip3 install -r requirements.txt
    ```
-5. Download pre-trained COCO weights (mask_rcnn_coco.h5) from the [releases page](https://github.com/matterport/Mask_RCNN/releases) into app/Mask_RCNN.
-6. To run the tool, run `python app.py` in wherever you have your `app` directory is
-7. Open http://127.0.0.1:5000/ on a browser (FireFox has been noted to have compatibility issues)
+4. Download pre-trained COCO weights (mask_rcnn_coco.h5) from the [releases page](https://github.com/matterport/Mask_RCNN/releases) into app/Mask_RCNN.
+5. To run the tool, run `python app.py` in wherever you have your `app` directory is
+6. Open http://127.0.0.1:5000/ on a browser (FireFox has been noted to have compatibility issues)
 
 # Annotation quick start guide
 1. Batches of frames are found in `app/test_datasets`
@@ -53,7 +49,7 @@ Your LiDAR data should include a binary file of the full point cloud, a binary f
 # Drawing bounding boxes
 Bounding boxes can be drawn by holding the control key and clicking and dragging. When drawing bounding boxes, please view in 2D mode (rightmost button): 
 
-![Alt Text](https://github.com/bernwang/LiDAR-annotator/blob/evaluation/images/different_modes.png)
+![Alt Text](https://github.com/bernwang/LiDAR-annotator/blob/master/images/different_modes.png)
 
 The control key must held down for all bounding box operations. The follow features are supported:
 ## Resizing
@@ -61,7 +57,7 @@ The control key must held down for all bounding box operations. The follow featu
 2. You can only click and drag on a corner vertex if it is blue. It will turn blue if your mouse is close enough to it. 
 
 ## Translation
-1. When your cursor is inside the box and the box color changes to red, you can drag it around. 
+- When your cursor is inside the box and the box color changes to red, you can drag it around. 
 
 ## Rotation
 
@@ -70,7 +66,7 @@ The control key must held down for all bounding box operations. The follow featu
 1. To rotate bounding box, click and drag the point that is not a corner vertex (it should be between two corner vertices) and box will rotate with the point. 
 
 ## Deletion
-1. To delete bounding box, press the backspace/delete key while the bounding box is selected. 
+- To delete bounding box, press the backspace/delete key while the bounding box is selected. 
 
 ## One-click bounding box drawing
 ![Alt Text](https://github.com/bernwang/LiDAR-annotator/blob/master/gifs/one_click_annotation_cropped.gif)
@@ -78,7 +74,11 @@ The control key must held down for all bounding box operations. The follow featu
 2. You can adjust the auto-drawn bounding box afterwards
 
 ## Frame-by-frame tracking
-1. After annotating a frame, the next frame can be auto-annotated. 
+- After annotating a frame, the next frame can be auto-annotated. 
+
+## Sensor Fusion
+- 3D point cloud is projected onto the image which is then segmented by Mask R-CNN. The 3D points that are projected onto the masks are highlighted, and the segmented image is displayed.
+- An image classifier is used to pre-label a bounding box when it is manually drawn. 
 
 # Controls
 ## "3D" mode
