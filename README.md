@@ -1,8 +1,17 @@
-# Latte - A LiDAR Annotation Tool
-## Bernie Wang, Virginia Wu, Bichen Wu, Kurt Keutzer
-LiDAR annotation tool using ray tracing and bounding boxes.
+# LATTE: Accelerating LiDAR Point Cloud Annotation via Sensor Fusion, One-Click Annotation, and Tracking
+
+By Bernie Wang, Virginia Wu, Bichen Wu, Kurt Keutzer
+LiDAR annotation tool using ray tracing and bounding boxes. A demonstration of LATTE can be found below:
+
 ![Alt Text](https://github.com/bernwang/LiDAR-annotator/blob/evaluation/gifs/step1.gif)
-Demo Video: [https://www.youtube.com/watch?v=QWjWpqvYA_c](https://www.youtube.com/watch?v=QWjWpqvYA_c&feature=youtu.be)
+
+Please refer to our video for a more in-depth demo: https://www.youtube.com/watch?v=QWjWpqvYA_c. For more details, please refer to our paper: https://arxiv.org/abs/1904.09085. If you find this work useful for your research, please consider citing:
+
+   @unpublished{wang2019latte,
+        title={LATTE: Accelerating LiDAR Point Cloud Annotation via Sensor Fusion, One-Click Annotation, and Tracking},
+        author={Wang, Bernie and Wu, Virginia and Wu, Bichen and Keutzer, Kurt},
+        year={2019},
+    }
 
 ## Installation
 1. Clone this repository
